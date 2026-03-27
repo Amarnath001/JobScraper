@@ -1,0 +1,39 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: jobscraper
+      POSTGRES_PASSWORD: jobscraper
+      POSTGRES_DB: jobscraper
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U jobscraper -d jobscraper"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      APP_ENV: development
+      DATABASE_URL: postgresql+asyncpg://jobscraper:jobscraper@db:5432/jobscraper
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      EMAIL_FROM: ${EMAIL_FROM:-jobs@example.com}
+      EMAIL_TO: ${EMAIL_TO:-}
+      SEND_EMPTY_DIGEST: ${SEND_EMPTY_DIGEST:-false}
+      TIMEZONE: America/Los_Angeles
+      PLAYWRIGHT_HEADLESS: "true"
+      SCRAPE_TIMEOUT_SECONDS: "90"
+      LOG_LEVEL: INFO
+      ENABLE_SCHEDULER: ${ENABLE_SCHEDULER:-true}
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:
