@@ -44,6 +44,11 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Apply database migrations
+        run: |
+          set -euo pipefail
+          alembic upgrade head
+
       - name: Send daily digest
         run: |
           set -euo pipefail

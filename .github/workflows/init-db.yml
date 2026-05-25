@@ -1,0 +1,73 @@
+name: Init database (one-time)
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: init-db
+  cancel-in-progress: false
+
+jobs:
+  init:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Apply database migrations
+        run: |
+          set -euo pipefail
+          alembic upgrade head
+
+      - name: Import companies from JSON
+        run: |
+          set -euo pipefail
+          python scripts/import_companies_from_json.py
+
+      - name: Validate company sources
+        run: |
+          set -euo pipefail
+          python scripts/validate_companies.py
+
+      - name: Print summary
+        run: |
+          set -euo pipefail
+          python -c "
+          import asyncio
+          import os
+          import sys
+          sys.path.insert(0, '.')
+          from sqlalchemy import func, select
+          from app.core.database import get_session_factory
+          from app.db.models import Company
+
+          async def main():
+              async with get_session_factory()() as session:
+                  total = await session.scalar(select(func.count()).select_from(Company))
+                  enabled = await session.scalar(
+                      select(func.count()).select_from(Company).where(Company.enabled.is_(True))
+                  )
+              print('=== INIT DB SUMMARY ===')
+              print(f'companies_total={total}')
+              print(f'companies_enabled={enabled}')
+              print(f'companies_disabled={total - enabled}')
+              print('Next: run the \"Scrape every 3 hours\" workflow (migrations run automatically on each scrape).')
+
+          asyncio.run(main())
+          "

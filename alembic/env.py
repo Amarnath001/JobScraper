@@ -18,12 +18,16 @@ target_metadata = Base.metadata
 
 
 def get_url() -> str:
-    url = os.environ.get("DATABASE_URL", "")
+    url = (os.environ.get("DATABASE_URL") or "").strip()
+    if not url:
+        raise RuntimeError(
+            "DATABASE_URL is not set. Export it in the shell or add it as a GitHub Actions secret before running Alembic."
+        )
     if url.startswith("postgresql+asyncpg://"):
         return url
     if url.startswith("postgresql://"):
         return url.replace("postgresql://", "postgresql+asyncpg://", 1)
-    raise RuntimeError("DATABASE_URL must be set to a postgresql URL for migrations")
+    raise RuntimeError("DATABASE_URL must be a postgresql:// or postgresql+asyncpg:// URL for migrations")
 
 
 def run_migrations_offline() -> None:

@@ -46,6 +46,11 @@ jobs:
           pip install -r requirements.txt
           playwright install --with-deps chromium
 
+      - name: Apply database migrations
+        run: |
+          set -euo pipefail
+          alembic upgrade head
+
       - name: Run scrape cycle
         run: |
           set -euo pipefail

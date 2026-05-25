@@ -45,6 +45,7 @@ job-scraper/
     validate_companies.py
     seed_companies.py
   .github/workflows/
+    init-db.yml
     scrape-every-3-hours.yml
     daily-digest.yml
   Dockerfile
@@ -310,14 +311,37 @@ Look for:
 
 Run scraping and the morning digest **without a 24/7 server**. Point workflows at your managed PostgreSQL (e.g. [Render](https://render.com), [Neon](https://neon.tech), or Supabase) using repository secrets.
 
+### First-time setup (Render Postgres + GitHub)
+
+1. **Create Render PostgreSQL** and copy the **External** connection string.
+2. **Add GitHub repository secrets** (Settings → Secrets and variables → Actions):
+
+   | Secret | Example format |
+   |--------|----------------|
+   | `DATABASE_URL` | `postgresql+asyncpg://USER:PASS@HOST:5432/DB?sslmode=require` |
+   | `RESEND_API_KEY` | `re_...` |
+   | `EMAIL_FROM` | `Job Scraper <jobs@yourdomain.com>` |
+   | `EMAIL_TO` | `you@example.com` |
+
+   Secret **names** must match exactly. Paste only the value (no `DATABASE_URL=` prefix).
+
+3. **Run Init DB once** (manual workflow): Actions → **Init database (one-time)** → **Run workflow** on `main`.
+
+   This runs `alembic upgrade head`, imports `data/companies.json`, and validates sources. The log ends with `=== INIT DB SUMMARY ===` (company counts).
+
+4. **Run scrape** (manual or wait for cron): Actions → **Scrape every 3 hours** → **Run workflow**.
+
+   Scheduled scrape and digest workflows run `alembic upgrade head` on every job (idempotent). They do **not** re-import companies each time.
+
 ### Workflows
 
-| Workflow file | Cron (UTC) | Local time | Command |
-|---------------|------------|------------|---------|
-| `.github/workflows/scrape-every-3-hours.yml` | `0 */3 * * *` | Every 3 hours on the hour | `python scripts/run_scrape_cycle.py` (scrape + **email**) |
-| `.github/workflows/daily-digest.yml` | `0 14 * * *` | **6:00 AM** during PST; **7:00 AM** during PDT | `python scripts/send_daily_digest.py` (optional 24h catch-up) |
+| Workflow file | When | What it does |
+|---------------|------|----------------|
+| `init-db.yml` | Manual only | Migrations + import companies + validate (run **once** per database) |
+| `scrape-every-3-hours.yml` | `0 */3 * * *` UTC | `alembic upgrade head` → scrape + digest email |
+| `daily-digest.yml` | `0 14 * * *` UTC | `alembic upgrade head` → optional 24h digest email |
 
-Both workflows also support **manual runs** via `workflow_dispatch` (see below).
+All workflows support **Run workflow** via `workflow_dispatch`.
 
 **Post-scrape email (every 3 hours):** the scrape workflow sets `SEND_DIGEST_AFTER_SCRAPE=true` and `DIGEST_LOOKBACK_HOURS=4`. After each scrape it emails **entry-level** jobs whose `first_seen_at` is in that rolling window. No email is sent when there are zero qualifying jobs and `SEND_EMPTY_DIGEST=false`.
 
@@ -354,9 +378,9 @@ Workflows also set these **environment variables** (not secrets):
 | `SEND_DIGEST_AFTER_SCRAPE` | `true` on 3-hour scrape workflow |
 | `DIGEST_LOOKBACK_HOURS` | `4` on scrape workflow; `24` on daily-digest workflow |
 
-### One-time database setup
+### One-time database setup (local or CI)
 
-Run once against your production database (local machine or Codespaces):
+Same steps as the **Init database** workflow, runnable on your machine:
 
 ```bash
 export DATABASE_URL=postgresql+asyncpg://user:pass@host:5432/dbname
@@ -365,18 +389,20 @@ python scripts/import_companies_from_json.py
 python scripts/validate_companies.py
 ```
 
+Alembic reads `DATABASE_URL` from the environment (`alembic/env.py`); it does not use the placeholder URL in `alembic.ini`.
+
 ### Manually trigger a workflow
 
 1. Open the repo on GitHub → **Actions**.
-2. Select **Scrape every 3 hours** or **Daily digest email**.
-3. Click **Run workflow** → choose branch (usually `main`) → **Run workflow**.
+2. First time: **Init database (one-time)** → **Run workflow**.
+3. Then: **Scrape every 3 hours** or **Daily digest email** → **Run workflow** on `main`.
 
-Use this to test secrets, Playwright installs, and email delivery without waiting for cron.
+Use this to test secrets, migrations, Playwright, and email without waiting for cron.
 
 ### Inspect workflow logs
 
 1. **Actions** → click a workflow run → click the job (`scrape` or `digest`).
-2. Expand **Run scrape cycle** or **Send daily digest**.
+2. Expand **Apply database migrations**, **Run scrape cycle**, or **Send daily digest**.
 3. Look for structured blocks:
    - **Scrape:** `=== SCRAPE CYCLE SUMMARY ===` with `companies_scanned`, `jobs_seen`, `new_jobs_created`, `inactive_jobs_marked`, and `scraper_failures` (also printed as JSON).
    - **Digest:** `=== DAILY DIGEST SUMMARY ===` with `digest_jobs_count`, `digest_window`, `emails_sent`, and `email_sent_successfully`.

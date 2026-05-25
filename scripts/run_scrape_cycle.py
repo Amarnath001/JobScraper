@@ -24,6 +24,7 @@ sys.path.insert(0, _scripts)
 from app.core.database import get_engine, get_session_factory
 from app.core.email_validation import log_email_config_warnings
 from app.core.logging import setup_logging
+from app.core.schema_check import SCHEMA_NOT_INITIALIZED_MESSAGE, assert_database_schema_ready
 from app.services.scrape_runner_service import run_scrape_only, run_scrape_pipeline
 from ci_summary import log_digest_summary, log_scrape_summary
 
@@ -47,13 +48,20 @@ async def main() -> None:
         log_email_config_warnings()
 
     get_engine()
+    factory = get_session_factory()
+    try:
+        await assert_database_schema_ready(factory)
+    except RuntimeError as exc:
+        if str(exc) == SCHEMA_NOT_INITIALIZED_MESSAGE:
+            logger.error("%s", exc)
+            raise SystemExit(str(exc)) from exc
+        raise
+
     logger.info(
-        "Database engine initialized (send_digest_after_scrape=%s digest_lookback_hours=%s)",
+        "Database schema ready (send_digest_after_scrape=%s digest_lookback_hours=%s)",
         send_digest,
         os.environ.get("DIGEST_LOOKBACK_HOURS", ""),
     )
-
-    factory = get_session_factory()
     if send_digest:
         summary = await run_scrape_pipeline(factory, send_digest=True)
     else:
@@ -74,7 +82,10 @@ def run() -> int:
         return 0
     except SystemExit:
         raise
-    except Exception:
+    except Exception as exc:
+        if "does not exist" in str(exc).lower() and "relation" in str(exc).lower():
+            logger.error("%s", SCHEMA_NOT_INITIALIZED_MESSAGE)
+            raise SystemExit(SCHEMA_NOT_INITIALIZED_MESSAGE) from exc
         logger.exception("Scrape cycle failed with unhandled exception")
         return 1
 
