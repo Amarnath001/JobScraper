@@ -1,12 +1,19 @@
-from sqlalchemy import func, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.models import Company
 from app.schemas.company import CompanyCreate
 
 
-async def list_companies(session: AsyncSession) -> list[Company]:
-    res = await session.execute(select(Company).order_by(Company.name))
+async def list_companies(
+    session: AsyncSession,
+    *,
+    enabled: bool | None = None,
+) -> list[Company]:
+    stmt = select(Company).order_by(Company.name)
+    if enabled is not None:
+        stmt = stmt.where(Company.enabled.is_(enabled))
+    res = await session.execute(stmt)
     return list(res.scalars().all())
 
 
@@ -22,9 +29,3 @@ async def create_company(session: AsyncSession, data: CompanyCreate) -> Company:
     await session.flush()
     await session.refresh(company)
     return company
-
-
-async def count_enabled_companies(session: AsyncSession) -> int:
-    return int(
-        await session.scalar(select(func.count()).select_from(Company).where(Company.enabled.is_(True))) or 0
-    )

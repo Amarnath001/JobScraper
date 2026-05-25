@@ -5,6 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.core.config import get_settings
+from app.core.email_validation import validate_email_config
 from app.db.models import Company
 from app.scrapers.ashby import AshbyScraper
 from app.scrapers.base import BaseScraper
@@ -14,6 +15,7 @@ from app.scrapers.lever import LeverScraper
 from app.scrapers.workday import WorkdayScraper
 from app.services.digest_service import DigestService
 from app.services.email_service import EmailService
+from app.services.company_validation_service import is_http_404, record_scrape_failure, record_scrape_success
 from app.services.ingest_service import ingest_jobs_for_company
 from app.utils.dates import today_in_timezone
 
@@ -40,13 +42,22 @@ class PipelineSummary:
     jobs_seen: int = 0
     new_jobs_created: int = 0
     inactive_jobs_marked: int = 0
+    emails_attempted: int = 0
     emails_sent: int = 0
-    failures: list[str] = field(default_factory=list)
+    scraper_failures: list[str] = field(default_factory=list)
+    email_failures: list[str] = field(default_factory=list)
+
+
+def _pipeline_message(summary: PipelineSummary) -> str:
+    if summary.scraper_failures or summary.email_failures:
+        return "Scrape pipeline completed with partial failures"
+    return "Scrape pipeline completed"
 
 
 async def run_scrape_pipeline(session_factory: async_sessionmaker[AsyncSession]) -> PipelineSummary:
     summary = PipelineSummary()
     settings = get_settings()
+
     async with session_factory() as session:
         res = await session.execute(select(Company).where(Company.enabled.is_(True)).order_by(Company.id))
         companies = list(res.scalars().all())
@@ -62,6 +73,9 @@ async def run_scrape_pipeline(session_factory: async_sessionmaker[AsyncSession])
                     company_name=company.name,
                     normalized_jobs=normalized,
                 )
+                db_company = await session.get(Company, company.id)
+                if db_company:
+                    await record_scrape_success(session, db_company)
                 await session.commit()
             summary.companies_scanned += 1
             summary.jobs_seen += ingest.jobs_seen
@@ -75,9 +89,16 @@ async def run_scrape_pipeline(session_factory: async_sessionmaker[AsyncSession])
                 ingest.inactive_jobs_marked,
             )
         except Exception as e:
-            msg = f"{company.name}: {e}"
-            logger.exception("Scrape failed for %s", company.name)
-            summary.failures.append(msg)
+            async with session_factory() as session:
+                db_company = await session.get(Company, company.id)
+                if db_company:
+                    msg = await record_scrape_failure(session, db_company, e)
+                    await session.commit()
+                else:
+                    msg = f"{company.name}: {e}"
+                    if not is_http_404(e):
+                        logger.exception("Scrape failed for %s", company.name)
+            summary.scraper_failures.append(msg)
 
     digest_date = today_in_timezone(settings.timezone)
     async with session_factory() as session:
@@ -85,32 +106,54 @@ async def run_scrape_pipeline(session_factory: async_sessionmaker[AsyncSession])
         jobs = await digest_svc.get_todays_new_entry_level_jobs()
         subject, html, text = DigestService.build_digest_bodies(jobs, digest_date)
 
-    to_email = settings.email_to.strip()
-    if not to_email:
-        logger.warning("EMAIL_TO not set; skipping digest email")
-        return summary
+    config_issues = validate_email_config()
+    if config_issues:
+        for issue in config_issues:
+            summary.email_failures.append(issue)
+        logger.warning(
+            "Skipping digest send due to email config: %s",
+            "; ".join(config_issues),
+        )
+    else:
+        to_email = settings.email_to.strip()
+        email_svc = EmailService()
+        should_send = bool(jobs) or settings.send_empty_digest
 
-    email_svc = EmailService()
-    try:
-        if jobs:
-            email_svc.send_daily_digest(to_email=to_email, subject=subject, html=html, text=text)
-            summary.emails_sent = 1
-        elif settings.send_empty_digest:
-            email_svc.send_no_jobs_email(to_email=to_email)
-            summary.emails_sent = 1
+        if not should_send:
+            logger.info(
+                "No digest email attempted: jobs=%s SEND_EMPTY_DIGEST=%s",
+                len(jobs),
+                settings.send_empty_digest,
+            )
         else:
-            logger.info("No new entry-level jobs today; skipping email (SEND_EMPTY_DIGEST=false)")
-    except Exception as e:
-        summary.failures.append(f"email: {e}")
-        logger.exception("Digest email failed")
+            summary.emails_attempted = 1
+            if jobs:
+                sent = email_svc.send_daily_digest(
+                    to_email=to_email,
+                    subject=subject,
+                    html=html,
+                    text=text,
+                    job_count=len(jobs),
+                )
+            else:
+                sent = email_svc.send_no_jobs_email(to_email=to_email)
+
+            if sent:
+                summary.emails_sent = 1
+            else:
+                err = email_svc.last_error or "Email send returned False (see logs)"
+                summary.email_failures.append(err)
 
     logger.info(
-        "Pipeline complete: scanned=%s jobs_seen=%s new_jobs=%s inactive=%s emails=%s failures=%s",
+        "Pipeline complete: scanned=%s jobs_seen=%s new_jobs=%s inactive=%s "
+        "emails_attempted=%s emails_sent=%s scraper_failures=%s email_failures=%s",
         summary.companies_scanned,
         summary.jobs_seen,
         summary.new_jobs_created,
         summary.inactive_jobs_marked,
+        summary.emails_attempted,
         summary.emails_sent,
-        len(summary.failures),
+        len(summary.scraper_failures),
+        len(summary.email_failures),
     )
     return summary

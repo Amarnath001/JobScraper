@@ -1,0 +1,578 @@
+[
+  {
+    "name": "Stripe",
+    "source_type": "greenhouse",
+    "source_config": {
+      "board_token": "stripe"
+    },
+    "careers_url": "https://boards.greenhouse.io/stripe",
+    "enabled": true
+  },
+  {
+    "name": "Airbnb",
+    "source_type": "greenhouse",
+    "source_config": {
+      "board_token": "airbnb"
+    },
+    "careers_url": "https://boards.greenhouse.io/airbnb",
+    "enabled": true
+  },
+  {
+    "name": "Datadog",
+    "source_type": "greenhouse",
+    "source_config": {
+      "board_token": "datadog"
+    },
+    "careers_url": "https://boards.greenhouse.io/datadog",
+    "enabled": true
+  },
+  {
+    "name": "Coinbase",
+    "source_type": "greenhouse",
+    "source_config": {
+      "board_token": "coinbase"
+    },
+    "careers_url": "https://boards.greenhouse.io/coinbase",
+    "enabled": true
+  },
+  {
+    "name": "Shopify",
+    "source_type": "greenhouse",
+    "source_config": {
+      "board_token": "shopify"
+    },
+    "careers_url": "https://boards.greenhouse.io/shopify",
+    "enabled": true
+  },
+  {
+    "name": "Robinhood",
+    "source_type": "greenhouse",
+    "source_config": {
+      "board_token": "robinhood"
+    },
+    "careers_url": "https://boards.greenhouse.io/robinhood",
+    "enabled": true
+  },
+  {
+    "name": "Asana",
+    "source_type": "greenhouse",
+    "source_config": {
+      "board_token": "asana"
+    },
+    "careers_url": "https://boards.greenhouse.io/asana",
+    "enabled": true
+  },
+  {
+    "name": "Twilio",
+    "source_type": "greenhouse",
+    "source_config": {
+      "board_token": "twilio"
+    },
+    "careers_url": "https://boards.greenhouse.io/twilio",
+    "enabled": true
+  },
+  {
+    "name": "HubSpot",
+    "source_type": "greenhouse",
+    "source_config": {
+      "board_token": "hubspot"
+    },
+    "careers_url": "https://boards.greenhouse.io/hubspot",
+    "enabled": true
+  },
+  {
+    "name": "Figma",
+    "source_type": "greenhouse",
+    "source_config": {
+      "board_token": "figma"
+    },
+    "careers_url": "https://boards.greenhouse.io/figma",
+    "enabled": true
+  },
+  {
+    "name": "Notion",
+    "source_type": "greenhouse",
+    "source_config": {
+      "board_token": "notion"
+    },
+    "careers_url": "https://boards.greenhouse.io/notion",
+    "enabled": true
+  },
+  {
+    "name": "Brex",
+    "source_type": "greenhouse",
+    "source_config": {
+      "board_token": "brex"
+    },
+    "careers_url": "https://boards.greenhouse.io/brex",
+    "enabled": true
+  },
+  {
+    "name": "Rippling",
+    "source_type": "greenhouse",
+    "source_config": {
+      "board_token": "rippling"
+    },
+    "careers_url": "https://boards.greenhouse.io/rippling",
+    "enabled": true
+  },
+  {
+    "name": "Plaid",
+    "source_type": "greenhouse",
+    "source_config": {
+      "board_token": "plaid"
+    },
+    "careers_url": "https://boards.greenhouse.io/plaid",
+    "enabled": true
+  },
+  {
+    "name": "Scale AI",
+    "source_type": "greenhouse",
+    "source_config": {
+      "board_token": "scaleai"
+    },
+    "careers_url": "https://boards.greenhouse.io/scaleai",
+    "enabled": true
+  },
+  {
+    "name": "Ramp",
+    "source_type": "greenhouse",
+    "source_config": {
+      "board_token": "ramp"
+    },
+    "careers_url": "https://boards.greenhouse.io/ramp",
+    "enabled": true
+  },
+  {
+    "name": "Retool",
+    "source_type": "greenhouse",
+    "source_config": {
+      "board_token": "retool"
+    },
+    "careers_url": "https://boards.greenhouse.io/retool",
+    "enabled": true
+  },
+  {
+    "name": "Vercel",
+    "source_type": "greenhouse",
+    "source_config": {
+      "board_token": "vercel"
+    },
+    "careers_url": "https://boards.greenhouse.io/vercel",
+    "enabled": true
+  },
+  {
+    "name": "Discord",
+    "source_type": "greenhouse",
+    "source_config": {
+      "board_token": "discord"
+    },
+    "careers_url": "https://boards.greenhouse.io/discord",
+    "enabled": true
+  },
+  {
+    "name": "OpenAI",
+    "source_type": "greenhouse",
+    "source_config": {
+      "board_token": "openai"
+    },
+    "careers_url": "https://boards.greenhouse.io/openai",
+    "enabled": true
+  },
+  {
+    "name": "Anthropic",
+    "source_type": "greenhouse",
+    "source_config": {
+      "board_token": "anthropic"
+    },
+    "careers_url": "https://boards.greenhouse.io/anthropic",
+    "enabled": true
+  },
+  {
+    "name": "Snowflake",
+    "source_type": "greenhouse",
+    "source_config": {
+      "board_token": "snowflake"
+    },
+    "careers_url": "https://boards.greenhouse.io/snowflake",
+    "enabled": true
+  },
+  {
+    "name": "GitLab",
+    "source_type": "greenhouse",
+    "source_config": {
+      "board_token": "gitlab"
+    },
+    "careers_url": "https://boards.greenhouse.io/gitlab",
+    "enabled": true
+  },
+  {
+    "name": "Cloudflare",
+    "source_type": "greenhouse",
+    "source_config": {
+      "board_token": "cloudflare"
+    },
+    "careers_url": "https://boards.greenhouse.io/cloudflare",
+    "enabled": true
+  },
+  {
+    "name": "Databricks",
+    "source_type": "greenhouse",
+    "source_config": {
+      "board_token": "databricks"
+    },
+    "careers_url": "https://boards.greenhouse.io/databricks",
+    "enabled": true
+  },
+  {
+    "name": "HashiCorp",
+    "source_type": "greenhouse",
+    "source_config": {
+      "board_token": "hashicorp"
+    },
+    "careers_url": "https://boards.greenhouse.io/hashicorp",
+    "enabled": true
+  },
+  {
+    "name": "Okta",
+    "source_type": "greenhouse",
+    "source_config": {
+      "board_token": "okta"
+    },
+    "careers_url": "https://boards.greenhouse.io/okta",
+    "enabled": true
+  },
+  {
+    "name": "Elastic",
+    "source_type": "greenhouse",
+    "source_config": {
+      "board_token": "elastic"
+    },
+    "careers_url": "https://boards.greenhouse.io/elastic",
+    "enabled": true
+  },
+  {
+    "name": "PagerDuty",
+    "source_type": "greenhouse",
+    "source_config": {
+      "board_token": "pagerduty"
+    },
+    "careers_url": "https://boards.greenhouse.io/pagerduty",
+    "enabled": true
+  },
+  {
+    "name": "Gusto",
+    "source_type": "greenhouse",
+    "source_config": {
+      "board_token": "gusto"
+    },
+    "careers_url": "https://boards.greenhouse.io/gusto",
+    "enabled": true
+  },
+  {
+    "name": "Chime",
+    "source_type": "greenhouse",
+    "source_config": {
+      "board_token": "chime"
+    },
+    "careers_url": "https://boards.greenhouse.io/chime",
+    "enabled": true
+  },
+  {
+    "name": "Affirm",
+    "source_type": "greenhouse",
+    "source_config": {
+      "board_token": "affirm"
+    },
+    "careers_url": "https://boards.greenhouse.io/affirm",
+    "enabled": true
+  },
+  {
+    "name": "Square",
+    "source_type": "greenhouse",
+    "source_config": {
+      "board_token": "square"
+    },
+    "careers_url": "https://boards.greenhouse.io/square",
+    "enabled": true
+  },
+  {
+    "name": "Block",
+    "source_type": "greenhouse",
+    "source_config": {
+      "board_token": "block"
+    },
+    "careers_url": "https://boards.greenhouse.io/block",
+    "enabled": true
+  },
+  {
+    "name": "DoorDash",
+    "source_type": "greenhouse",
+    "source_config": {
+      "board_token": "doordash"
+    },
+    "careers_url": "https://boards.greenhouse.io/doordash",
+    "enabled": true
+  },
+  {
+    "name": "Instacart",
+    "source_type": "greenhouse",
+    "source_config": {
+      "board_token": "instacart"
+    },
+    "careers_url": "https://boards.greenhouse.io/instacart",
+    "enabled": true
+  },
+  {
+    "name": "Lyft",
+    "source_type": "greenhouse",
+    "source_config": {
+      "board_token": "lyft"
+    },
+    "careers_url": "https://boards.greenhouse.io/lyft",
+    "enabled": true
+  },
+  {
+    "name": "Reddit",
+    "source_type": "greenhouse",
+    "source_config": {
+      "board_token": "reddit"
+    },
+    "careers_url": "https://boards.greenhouse.io/reddit",
+    "enabled": true
+  },
+  {
+    "name": "Pinterest",
+    "source_type": "greenhouse",
+    "source_config": {
+      "board_token": "pinterest"
+    },
+    "careers_url": "https://boards.greenhouse.io/pinterest",
+    "enabled": true
+  },
+  {
+    "name": "Canva",
+    "source_type": "greenhouse",
+    "source_config": {
+      "board_token": "canva"
+    },
+    "careers_url": "https://boards.greenhouse.io/canva",
+    "enabled": true
+  },
+  {
+    "name": "Grammarly",
+    "source_type": "greenhouse",
+    "source_config": {
+      "board_token": "grammarly"
+    },
+    "careers_url": "https://boards.greenhouse.io/grammarly",
+    "enabled": true
+  },
+  {
+    "name": "Segment",
+    "source_type": "greenhouse",
+    "source_config": {
+      "board_token": "segment"
+    },
+    "careers_url": "https://boards.greenhouse.io/segment",
+    "enabled": true
+  },
+  {
+    "name": "Zapier",
+    "source_type": "greenhouse",
+    "source_config": {
+      "board_token": "zapier"
+    },
+    "careers_url": "https://boards.greenhouse.io/zapier",
+    "enabled": true
+  },
+  {
+    "name": "Airtable",
+    "source_type": "greenhouse",
+    "source_config": {
+      "board_token": "airtable"
+    },
+    "careers_url": "https://boards.greenhouse.io/airtable",
+    "enabled": true
+  },
+  {
+    "name": "Monday",
+    "source_type": "greenhouse",
+    "source_config": {
+      "board_token": "monday"
+    },
+    "careers_url": "https://boards.greenhouse.io/monday",
+    "enabled": true
+  },
+  {
+    "name": "ClickUp",
+    "source_type": "greenhouse",
+    "source_config": {
+      "board_token": "clickup"
+    },
+    "careers_url": "https://boards.greenhouse.io/clickup",
+    "enabled": true
+  },
+  {
+    "name": "Miro",
+    "source_type": "greenhouse",
+    "source_config": {
+      "board_token": "miro"
+    },
+    "careers_url": "https://boards.greenhouse.io/miro",
+    "enabled": true
+  },
+  {
+    "name": "Webflow",
+    "source_type": "greenhouse",
+    "source_config": {
+      "board_token": "webflow"
+    },
+    "careers_url": "https://boards.greenhouse.io/webflow",
+    "enabled": true
+  },
+  {
+    "name": "Intercom",
+    "source_type": "greenhouse",
+    "source_config": {
+      "board_token": "intercom"
+    },
+    "careers_url": "https://boards.greenhouse.io/intercom",
+    "enabled": true
+  },
+  {
+    "name": "Netflix",
+    "source_type": "lever",
+    "source_config": {
+      "company": "netflix"
+    },
+    "careers_url": "https://jobs.lever.co/netflix",
+    "enabled": true
+  },
+  {
+    "name": "Atlassian",
+    "source_type": "lever",
+    "source_config": {
+      "company": "atlassian"
+    },
+    "careers_url": "https://jobs.lever.co/atlassian",
+    "enabled": true
+  },
+  {
+    "name": "Slack",
+    "source_type": "lever",
+    "source_config": {
+      "company": "slack"
+    },
+    "careers_url": "https://jobs.lever.co/slack",
+    "enabled": true
+  },
+  {
+    "name": "Dropbox",
+    "source_type": "lever",
+    "source_config": {
+      "company": "dropbox"
+    },
+    "careers_url": "https://jobs.lever.co/dropbox",
+    "enabled": true
+  },
+  {
+    "name": "Sentry",
+    "source_type": "lever",
+    "source_config": {
+      "company": "sentry"
+    },
+    "careers_url": "https://jobs.lever.co/sentry",
+    "enabled": true
+  },
+  {
+    "name": "PostHog",
+    "source_type": "lever",
+    "source_config": {
+      "company": "posthog"
+    },
+    "careers_url": "https://jobs.lever.co/posthog",
+    "enabled": true
+  },
+  {
+    "name": "Algolia",
+    "source_type": "lever",
+    "source_config": {
+      "company": "algolia"
+    },
+    "careers_url": "https://jobs.lever.co/algolia",
+    "enabled": true
+  },
+  {
+    "name": "Amplitude",
+    "source_type": "lever",
+    "source_config": {
+      "company": "amplitude"
+    },
+    "careers_url": "https://jobs.lever.co/amplitude",
+    "enabled": true
+  },
+  {
+    "name": "Benchling",
+    "source_type": "lever",
+    "source_config": {
+      "company": "benchling"
+    },
+    "careers_url": "https://jobs.lever.co/benchling",
+    "enabled": true
+  },
+  {
+    "name": "CircleCI",
+    "source_type": "lever",
+    "source_config": {
+      "company": "circleci"
+    },
+    "careers_url": "https://jobs.lever.co/circleci",
+    "enabled": true
+  },
+  {
+    "name": "Gong",
+    "source_type": "lever",
+    "source_config": {
+      "company": "gong"
+    },
+    "careers_url": "https://jobs.lever.co/gong",
+    "enabled": true
+  },
+  {
+    "name": "Drata",
+    "source_type": "lever",
+    "source_config": {
+      "company": "drata"
+    },
+    "careers_url": "https://jobs.lever.co/drata",
+    "enabled": true
+  },
+  {
+    "name": "Lattice",
+    "source_type": "lever",
+    "source_config": {
+      "company": "lattice"
+    },
+    "careers_url": "https://jobs.lever.co/lattice",
+    "enabled": true
+  },
+  {
+    "name": "Samsara",
+    "source_type": "lever",
+    "source_config": {
+      "company": "samsara"
+    },
+    "careers_url": "https://jobs.lever.co/samsara",
+    "enabled": true
+  },
+  {
+    "name": "Carta",
+    "source_type": "lever",
+    "source_config": {
+      "company": "carta"
+    },
+    "careers_url": "https://jobs.lever.co/carta",
+    "enabled": true
+  }
+]

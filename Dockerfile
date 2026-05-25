@@ -36,6 +36,7 @@ COPY alembic.ini .
 COPY alembic ./alembic
 COPY app ./app
 COPY scripts ./scripts
+COPY data ./data
 COPY pytest.ini .
 COPY tests ./tests
 
