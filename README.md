@@ -211,7 +211,7 @@ Prefer editing `data/companies.json` and running `scripts/import_companies_from_
 ## Daily 6:00 AM digest
 
 - **Docker / local API:** APScheduler runs the full pipeline at **06:00** in `TIMEZONE` when `ENABLE_SCHEDULER=true`.
-- **GitHub Actions:** `daily-digest.yml` runs `scripts/send_daily_digest.py` at 6:00 AM Pacific; `scrape-every-3-hours.yml` keeps the DB updated.
+- **GitHub Actions:** `scrape-every-3-hours.yml` scrapes every 3 hours **and sends a digest email** (entry-level jobs first seen in the last `DIGEST_LOOKBACK_HOURS`, default 4). `daily-digest.yml` is an optional morning catch-up (24h window); disable it if you only want post-scrape emails.
 - After all enabled companies are scraped and ingested, the service loads jobs with `first_seen_at` in the **current local day** and `is_entry_level = true`, sorts by company and title, and sends one email.
 - **Old jobs never appear again** in the digest: only rows whose `first_seen_at` is that day in `TIMEZONE` are included.
 
@@ -314,12 +314,16 @@ Run scraping and the morning digest **without a 24/7 server**. Point workflows a
 
 | Workflow file | Cron (UTC) | Local time | Command |
 |---------------|------------|------------|---------|
-| `.github/workflows/scrape-every-3-hours.yml` | `0 */3 * * *` | Every 3 hours on the hour | `python scripts/run_scrape_cycle.py` |
-| `.github/workflows/daily-digest.yml` | `0 14 * * *` | **6:00 AM** during PST; **7:00 AM** during PDT | `python scripts/send_daily_digest.py` |
+| `.github/workflows/scrape-every-3-hours.yml` | `0 */3 * * *` | Every 3 hours on the hour | `python scripts/run_scrape_cycle.py` (scrape + **email**) |
+| `.github/workflows/daily-digest.yml` | `0 14 * * *` | **6:00 AM** during PST; **7:00 AM** during PDT | `python scripts/send_daily_digest.py` (optional 24h catch-up) |
 
 Both workflows also support **manual runs** via `workflow_dispatch` (see below).
 
-Scraping and email are **split**: scrapes run throughout the day; the digest runs once in the morning. The digest workflow sets `DIGEST_LOOKBACK_HOURS=24` so the email includes entry-level jobs whose `first_seen_at` is within the last 24 hours (UTC). The in-app APScheduler job still uses **calendar-day** boundaries in `TIMEZONE` unless you set `DIGEST_LOOKBACK_HOURS` locally.
+**Post-scrape email (every 3 hours):** the scrape workflow sets `SEND_DIGEST_AFTER_SCRAPE=true` and `DIGEST_LOOKBACK_HOURS=4`. After each scrape it emails **entry-level** jobs whose `first_seen_at` is in that rolling window. No email is sent when there are zero qualifying jobs and `SEND_EMPTY_DIGEST=false`.
+
+**Morning email (optional):** `daily-digest.yml` uses a 24h lookback. You can disable that workflow on GitHub if you only want the 3-hour emails.
+
+The in-app APScheduler (`ENABLE_SCHEDULER=true`) runs the full pipeline at 6:00 AM with **calendar-day** digest unless you set `DIGEST_LOOKBACK_HOURS` in `.env`.
 
 ### How cron schedules work
 
@@ -347,7 +351,8 @@ Workflows also set these **environment variables** (not secrets):
 | `PLAYWRIGHT_HEADLESS` | `true` |
 | `LOG_LEVEL` | `INFO` |
 | `ENABLE_SCHEDULER` | `false` (no APScheduler in CI) |
-| `DIGEST_LOOKBACK_HOURS` | `24` (digest workflow only) |
+| `SEND_DIGEST_AFTER_SCRAPE` | `true` on 3-hour scrape workflow |
+| `DIGEST_LOOKBACK_HOURS` | `4` on scrape workflow; `24` on daily-digest workflow |
 
 ### One-time database setup
 

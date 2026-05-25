@@ -44,7 +44,7 @@ def log_digest_summary(summary: PipelineSummary) -> None:
         "email_sent_successfully": email_ok,
         "email_failures": summary.email_failures,
     }
-    logger.info("=== DAILY DIGEST SUMMARY ===")
+    logger.info("=== DIGEST EMAIL SUMMARY ===")
     for key, value in payload.items():
         logger.info("%s=%s", key, value)
     print(json.dumps(payload, indent=2))

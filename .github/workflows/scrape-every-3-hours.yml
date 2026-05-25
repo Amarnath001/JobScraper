@@ -26,6 +26,8 @@ jobs:
       SCRAPE_TIMEOUT_SECONDS: "90"
       LOG_LEVEL: INFO
       US_ONLY_MODE: "true"
+      SEND_DIGEST_AFTER_SCRAPE: "true"
+      DIGEST_LOOKBACK_HOURS: "4"
 
     steps:
       - name: Checkout

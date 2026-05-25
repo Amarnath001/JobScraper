@@ -188,6 +188,8 @@ async def _send_digest_email(
     summary: PipelineSummary,
 ) -> None:
     digest_summary = await run_daily_digest_only(session_factory)
+    summary.digest_jobs_count = digest_summary.digest_jobs_count
+    summary.digest_window = digest_summary.digest_window
     summary.emails_attempted = digest_summary.emails_attempted
     summary.emails_sent = digest_summary.emails_sent
     summary.email_failures.extend(digest_summary.email_failures)
