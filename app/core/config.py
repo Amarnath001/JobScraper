@@ -1,6 +1,7 @@
 from functools import lru_cache
+from typing import Any
 
-from pydantic import Field
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -22,6 +23,15 @@ class Settings(BaseSettings):
     scrape_timeout_seconds: float = Field(default=60.0, alias="SCRAPE_TIMEOUT_SECONDS")
     log_level: str = Field(default="INFO", alias="LOG_LEVEL")
     enable_scheduler: bool = Field(default=True, alias="ENABLE_SCHEDULER")
+    digest_lookback_hours: int | None = Field(default=None, alias="DIGEST_LOOKBACK_HOURS")
+    us_only_mode: bool = Field(default=True, alias="US_ONLY_MODE")
+
+    @field_validator("digest_lookback_hours", mode="before")
+    @classmethod
+    def _empty_digest_lookback(cls, value: Any) -> Any:
+        if value == "" or value is None:
+            return None
+        return value
 
 
 @lru_cache

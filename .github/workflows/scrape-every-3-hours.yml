@@ -1,0 +1,50 @@
+name: Scrape every 3 hours
+
+on:
+  schedule:
+    # Every 3 hours at minute 0 (UTC)
+    - cron: "0 */3 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: scrape-cycle
+  cancel-in-progress: false
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+      EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+      EMAIL_TO: ${{ secrets.EMAIL_TO }}
+      TIMEZONE: America/Los_Angeles
+      ENABLE_SCHEDULER: "false"
+      APP_ENV: production
+      PLAYWRIGHT_HEADLESS: "true"
+      SCRAPE_TIMEOUT_SECONDS: "90"
+      LOG_LEVEL: INFO
+      US_ONLY_MODE: "true"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies and Playwright Chromium
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          playwright install --with-deps chromium
+
+      - name: Run scrape cycle
+        run: |
+          set -euo pipefail
+          python scripts/run_scrape_cycle.py

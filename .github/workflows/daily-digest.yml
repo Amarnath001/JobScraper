@@ -1,0 +1,50 @@
+name: Daily digest email
+
+on:
+  schedule:
+    # 6:00 AM America/Los_Angeles during PST (UTC-8) → 14:00 UTC
+    # During PDT (UTC-7) this fires at 7:00 AM local; jobs still use TIMEZONE for labeling.
+    - cron: "0 14 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: daily-digest
+  cancel-in-progress: false
+
+jobs:
+  digest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+      EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+      EMAIL_TO: ${{ secrets.EMAIL_TO }}
+      TIMEZONE: America/Los_Angeles
+      ENABLE_SCHEDULER: "false"
+      APP_ENV: production
+      PLAYWRIGHT_HEADLESS: "true"
+      SEND_EMPTY_DIGEST: "false"
+      DIGEST_LOOKBACK_HOURS: "24"
+      LOG_LEVEL: INFO
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Send daily digest
+        run: |
+          set -euo pipefail
+          python scripts/send_daily_digest.py

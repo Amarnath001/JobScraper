@@ -7,8 +7,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.models import Job
 from app.schemas.job import NormalizedJob
+from app.core.config import get_settings
 from app.services.dedupe_service import fingerprint_for_normalized
 from app.services.filter_service import score_entry_level
+from app.services.location_filter_service import is_us_or_remote
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +24,7 @@ class IngestResult:
     jobs_seen: int
     new_jobs_created: int
     inactive_jobs_marked: int
+    jobs_skipped_location: int = 0
 
 
 async def ingest_jobs_for_company(
@@ -34,8 +37,18 @@ async def ingest_jobs_for_company(
     now = utc_now()
     seen_hashes: set[str] = set()
     new_jobs_created = 0
+    jobs_skipped_location = 0
+    us_only = get_settings().us_only_mode
 
     for nj in normalized_jobs:
+        if us_only and not is_us_or_remote(nj.location):
+            jobs_skipped_location += 1
+            logger.info(
+                "Skipping international job: Company=%s Location=%s",
+                company_name,
+                nj.location or "",
+            )
+            continue
         fp = fingerprint_for_normalized(company_name, nj)
         seen_hashes.add(fp)
         score_res = score_entry_level(nj.title, nj.description_text, nj.level)
@@ -110,8 +123,17 @@ async def ingest_jobs_for_company(
 
     await session.flush()
 
+    if jobs_skipped_location:
+        logger.info(
+            "Location filter: company=%s skipped=%s kept=%s",
+            company_name,
+            jobs_skipped_location,
+            len(seen_hashes),
+        )
+
     return IngestResult(
         jobs_seen=len(normalized_jobs),
         new_jobs_created=new_jobs_created,
         inactive_jobs_marked=inactive_jobs_marked,
+        jobs_skipped_location=jobs_skipped_location,
     )

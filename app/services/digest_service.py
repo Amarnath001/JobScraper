@@ -1,6 +1,6 @@
 import html
 from collections import defaultdict
-from datetime import date
+from datetime import date, datetime, timedelta, timezone
 
 from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -39,6 +39,23 @@ class DigestService:
                     Job.is_entry_level.is_(True),
                     Job.first_seen_at >= start,
                     Job.first_seen_at <= end,
+                )
+            )
+            .order_by(Job.company_id, Job.title)
+        )
+        res = await self._session.execute(stmt)
+        return list(res.unique().scalars().all())
+
+    async def get_entry_level_jobs_first_seen_within_hours(self, hours: int) -> list[Job]:
+        """Entry-level jobs whose first_seen_at is within the last `hours` (UTC)."""
+        since = datetime.now(timezone.utc) - timedelta(hours=hours)
+        stmt = (
+            select(Job)
+            .options(joinedload(Job.company))
+            .where(
+                and_(
+                    Job.is_entry_level.is_(True),
+                    Job.first_seen_at >= since,
                 )
             )
             .order_by(Job.company_id, Job.title)

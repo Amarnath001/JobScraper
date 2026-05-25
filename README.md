@@ -39,9 +39,14 @@ job-scraper/
   data/
     companies.json # canonical company list
   scripts/
+    run_scrape_cycle.py
+    send_daily_digest.py
     import_companies_from_json.py
     validate_companies.py
     seed_companies.py
+  .github/workflows/
+    scrape-every-3-hours.yml
+    daily-digest.yml
   Dockerfile
   docker-compose.yml
   requirements.txt
@@ -98,8 +103,67 @@ See `.env.example`. Important variables:
 | `SEND_EMPTY_DIGEST` | If `true`, send a short email when no new entry-level jobs today |
 | `TIMEZONE` | Digest “today” boundaries and scheduler TZ (default `America/Los_Angeles`) |
 | `ENABLE_SCHEDULER` | `false` to disable the 6 AM job (useful locally) |
+| `DIGEST_LOOKBACK_HOURS` | Optional rolling window for `send_daily_digest.py` (e.g. `24`); unset = calendar day in `TIMEZONE` |
 | `PLAYWRIGHT_HEADLESS` | Browser headless mode |
 | `SCRAPE_TIMEOUT_SECONDS` | HTTP / navigation timeouts |
+| `US_ONLY_MODE` | When `true` (default), ingest keeps only US and US-compatible remote jobs |
+
+## US location filtering
+
+When `US_ONLY_MODE=true`, the ingest pipeline (`ingest_service`) filters every scraped job **before** insert using `location_filter_service`. Only jobs that pass `is_us_or_remote(location)` are stored.
+
+### How it works
+
+1. **Normalize** the location string (lowercase, trim, collapse whitespace).
+2. **Split** multi-location strings on `|`, `/`, `;`, ` or `, and ` and `.
+3. **Classify** each segment into `US`, `REMOTE_US`, `INTERNATIONAL`, or `UNKNOWN`.
+4. **Accept** only when every segment is `US` or `REMOTE_US` (no international segment, no unknown segment).
+
+Helper API:
+
+- `normalize_location(location)` — string cleanup
+- `classify_location(location)` — returns a `LocationCategory`
+- `is_us_or_remote(location)` — `True` for `US` and `REMOTE_US`
+
+### Accepted examples
+
+| Location | Category |
+|----------|----------|
+| `San Francisco, CA` | US |
+| `New York, NY` | US |
+| `United States` / `USA` / `US` | US |
+| `Hybrid - San Francisco` | US |
+| `Remote` | REMOTE_US |
+| `Remote US`, `US Remote` | REMOTE_US |
+| `Remote - United States`, `Anywhere in US` | REMOTE_US |
+| `Remote/San Francisco` | US (US city + remote) |
+
+### Rejected examples
+
+| Location | Reason |
+|----------|--------|
+| `London`, `Paris, France`, `Berlin` | International city/country markers |
+| `Toronto`, `Vancouver`, `Remote Canada` | Canada |
+| `India`, `Singapore`, `Tokyo`, `Sydney` | Non-US regions |
+| `Remote EMEA`, `Remote Europe`, `Remote India` | Remote tied to non-US region |
+| `San Francisco, CA \| London, UK` | Mixed US + international |
+| `EMEA`, `TBD` | Unknown (not persisted) |
+
+Skipped jobs are logged at INFO:
+
+`Skipping international job: Company=Datadog Location=Paris, France`
+
+### Disable filtering
+
+Set in `.env` or GitHub Actions env:
+
+```bash
+US_ONLY_MODE=false
+```
+
+All scraped locations are stored again (previous behavior).
+
+To extend rules later, edit pattern groups in `app/services/location_filter_service.py` (US cities, international markers, remote-US phrases).
 
 ## Why companies get disabled
 
@@ -146,7 +210,8 @@ Prefer editing `data/companies.json` and running `scripts/import_companies_from_
 
 ## Daily 6:00 AM digest
 
-- APScheduler runs `run_scrape_pipeline` at **06:00** in `TIMEZONE`.
+- **Docker / local API:** APScheduler runs the full pipeline at **06:00** in `TIMEZONE` when `ENABLE_SCHEDULER=true`.
+- **GitHub Actions:** `daily-digest.yml` runs `scripts/send_daily_digest.py` at 6:00 AM Pacific; `scrape-every-3-hours.yml` keeps the DB updated.
 - After all enabled companies are scraped and ingested, the service loads jobs with `first_seen_at` in the **current local day** and `is_entry_level = true`, sorts by company and title, and sends one email.
 - **Old jobs never appear again** in the digest: only rows whose `first_seen_at` is that day in `TIMEZONE` are included.
 
@@ -240,6 +305,93 @@ Look for:
 - `scraper_failures`: per-company scrape errors
 - `email_failures`: config or Resend issues
 - `emails_attempted` / `emails_sent`: only count a sent email when the provider returns an id
+
+## GitHub Actions (production scheduling)
+
+Run scraping and the morning digest **without a 24/7 server**. Point workflows at your managed PostgreSQL (e.g. [Render](https://render.com), [Neon](https://neon.tech), or Supabase) using repository secrets.
+
+### Workflows
+
+| Workflow file | Cron (UTC) | Local time | Command |
+|---------------|------------|------------|---------|
+| `.github/workflows/scrape-every-3-hours.yml` | `0 */3 * * *` | Every 3 hours on the hour | `python scripts/run_scrape_cycle.py` |
+| `.github/workflows/daily-digest.yml` | `0 14 * * *` | **6:00 AM** during PST; **7:00 AM** during PDT | `python scripts/send_daily_digest.py` |
+
+Both workflows also support **manual runs** via `workflow_dispatch` (see below).
+
+Scraping and email are **split**: scrapes run throughout the day; the digest runs once in the morning. The digest workflow sets `DIGEST_LOOKBACK_HOURS=24` so the email includes entry-level jobs whose `first_seen_at` is within the last 24 hours (UTC). The in-app APScheduler job still uses **calendar-day** boundaries in `TIMEZONE` unless you set `DIGEST_LOOKBACK_HOURS` locally.
+
+### How cron schedules work
+
+- GitHub Actions `schedule` uses **UTC** only (unless you add a `timezone` field on the cron entry).
+- `0 */3 * * *` — at minute 0, every 3rd hour (00:00, 03:00, 06:00, … UTC).
+- `0 14 * * *` — 14:00 UTC daily, which is **6:00 AM Pacific Standard Time** (UTC−8). During daylight saving (PDT, UTC−7) the same cron fires at **7:00 AM** local. If you need 6:00 AM year-round regardless of DST, change the workflow to `cron: "0 6 * * *"` with `timezone: America/Los_Angeles` instead of the UTC line above.
+- Scheduled runs only run on the **default branch** (usually `main`) and may be delayed a few minutes during high GitHub load.
+
+### Required GitHub Secrets
+
+Add under **Settings → Secrets and variables → Actions → Repository secrets**:
+
+| Secret | Purpose |
+|--------|---------|
+| `DATABASE_URL` | Async SQLAlchemy URL, e.g. `postgresql+asyncpg://user:pass@host/db?ssl=require` (Render external URL) |
+| `RESEND_API_KEY` | Resend API key with send permission |
+| `EMAIL_FROM` | Verified sender, e.g. `Job Scraper <jobs@yourdomain.com>` |
+| `EMAIL_TO` | Recipient inbox |
+
+Workflows also set these **environment variables** (not secrets):
+
+| Variable | Value |
+|----------|--------|
+| `TIMEZONE` | `America/Los_Angeles` |
+| `PLAYWRIGHT_HEADLESS` | `true` |
+| `LOG_LEVEL` | `INFO` |
+| `ENABLE_SCHEDULER` | `false` (no APScheduler in CI) |
+| `DIGEST_LOOKBACK_HOURS` | `24` (digest workflow only) |
+
+### One-time database setup
+
+Run once against your production database (local machine or Codespaces):
+
+```bash
+export DATABASE_URL=postgresql+asyncpg://user:pass@host:5432/dbname
+alembic upgrade head
+python scripts/import_companies_from_json.py
+python scripts/validate_companies.py
+```
+
+### Manually trigger a workflow
+
+1. Open the repo on GitHub → **Actions**.
+2. Select **Scrape every 3 hours** or **Daily digest email**.
+3. Click **Run workflow** → choose branch (usually `main`) → **Run workflow**.
+
+Use this to test secrets, Playwright installs, and email delivery without waiting for cron.
+
+### Inspect workflow logs
+
+1. **Actions** → click a workflow run → click the job (`scrape` or `digest`).
+2. Expand **Run scrape cycle** or **Send daily digest**.
+3. Look for structured blocks:
+   - **Scrape:** `=== SCRAPE CYCLE SUMMARY ===` with `companies_scanned`, `jobs_seen`, `new_jobs_created`, `inactive_jobs_marked`, and `scraper_failures` (also printed as JSON).
+   - **Digest:** `=== DAILY DIGEST SUMMARY ===` with `digest_jobs_count`, `digest_window`, `emails_sent`, and `email_sent_successfully`.
+4. Per-company lines appear at `INFO` during scrape (`Scraped company=…`).
+5. Failures print `SCRAPER_FAILURE:` or `EMAIL_FAILURE:` on stderr; unhandled exceptions fail the step with a non-zero exit code.
+
+### Exit behavior
+
+- **Scrape:** exits `0` even when individual companies fail (404s, timeouts), so one bad board does not block the whole run. Unhandled exceptions exit `1`.
+- **Digest:** exits `1` if Resend/config fails or an email was attempted but not confirmed sent. Skips send when there are zero qualifying jobs and `SEND_EMPTY_DIGEST=false` (exit `0`).
+
+### Cost notes
+
+- GitHub Actions: generous free minutes on public repos; private repos have a monthly allowance.
+- Render/Neon/Supabase free tiers are usually enough for this workload.
+- Resend: free tier for low email volume.
+
+### Optional: Docker locally
+
+Use Docker for development and the HTTP API (`/admin/*`). Production scheduling can be entirely GitHub Actions with `ENABLE_SCHEDULER=false` locally.
 
 ## Local development (without Docker)
 
