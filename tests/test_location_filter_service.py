@@ -74,15 +74,13 @@ def test_rejected_international(location: str) -> None:
     assert not is_us_or_remote(location)
 
 
-@pytest.mark.parametrize(
-    "location",
-    [
-        "EMEA",
-        "APAC",
-        "Multiple Locations",
-        "TBD",
-    ],
-)
+@pytest.mark.parametrize("location", ["EMEA", "APAC"])
+def test_regional_international_locations(location: str) -> None:
+    assert classify_location(location) == LocationCategory.INTERNATIONAL
+    assert not is_us_or_remote(location)
+
+
+@pytest.mark.parametrize("location", ["Multiple Locations", "TBD"])
 def test_unknown_locations(location: str) -> None:
     assert classify_location(location) == LocationCategory.UNKNOWN
     assert not is_us_or_remote(location)

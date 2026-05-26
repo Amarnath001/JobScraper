@@ -19,7 +19,7 @@ from app.scrapers.workday import WorkdayScraper
 from app.services.digest_service import DigestService
 from app.services.email_service import EmailService
 from app.services.company_validation_service import is_http_404, record_scrape_failure, record_scrape_success
-from app.services.ingest_service import ingest_jobs_for_company
+from app.services.ingest_service import IngestResult, ingest_jobs_for_company, merge_ingest_results
 from app.utils.dates import today_in_timezone
 
 logger = logging.getLogger(__name__)
@@ -45,15 +45,39 @@ def build_scraper(company: Company) -> BaseScraper:
 @dataclass
 class PipelineSummary:
     companies_scanned: int = 0
-    jobs_seen: int = 0
-    new_jobs_created: int = 0
-    inactive_jobs_marked: int = 0
+    ingest: IngestResult = field(default_factory=IngestResult)
     emails_attempted: int = 0
     emails_sent: int = 0
     scraper_failures: list[str] = field(default_factory=list)
     email_failures: list[str] = field(default_factory=list)
-    digest_jobs_count: int = 0
+    digest_candidates_count: int = 0
+    digest_swe_jobs_count: int = 0
+    digest_entry_level_swe_jobs_count: int = 0
     digest_window: str = ""
+
+    @property
+    def jobs_seen(self) -> int:
+        return self.ingest.jobs_seen
+
+    @property
+    def jobs_seen_total(self) -> int:
+        return self.ingest.jobs_seen_total
+
+    @property
+    def new_jobs_created(self) -> int:
+        return self.ingest.new_jobs_created
+
+    @property
+    def jobs_inserted_total(self) -> int:
+        return self.ingest.jobs_inserted_total
+
+    @property
+    def inactive_jobs_marked(self) -> int:
+        return self.ingest.inactive_jobs_marked
+
+    @property
+    def digest_jobs_count(self) -> int:
+        return self.digest_candidates_count
 
 
 def _pipeline_message(summary: PipelineSummary) -> str:
@@ -82,12 +106,14 @@ async def run_daily_digest_only(session_factory: async_sessionmaker[AsyncSession
         else:
             jobs = await digest_svc.get_todays_new_entry_level_jobs()
             summary.digest_window = f"today in {settings.timezone}"
-        summary.digest_jobs_count = len(jobs)
+        summary.digest_candidates_count = len(jobs)
+        summary.digest_swe_jobs_count = len(jobs)
+        summary.digest_entry_level_swe_jobs_count = len(jobs)
         subject, html, text = DigestService.build_digest_bodies(jobs, digest_date)
         logger.info(
-            "Digest query: window=%s entry_level_jobs=%s",
+            "Digest query: window=%s digest_candidates=%s",
             summary.digest_window,
-            summary.digest_jobs_count,
+            summary.digest_candidates_count,
         )
 
     config_issues = validate_email_config()
@@ -191,14 +217,13 @@ async def _scrape_enabled_companies(
                     await record_scrape_success(session, db_company)
                 await session.commit()
             summary.companies_scanned += 1
-            summary.jobs_seen += ingest.jobs_seen
-            summary.new_jobs_created += ingest.new_jobs_created
-            summary.inactive_jobs_marked += ingest.inactive_jobs_marked
+            merge_ingest_results(summary.ingest, ingest)
             logger.info(
-                "Scraped company=%s jobs_seen=%s new=%s inactive=%s",
+                "Scraped company=%s jobs_seen=%s new=%s digest_eligible=%s inactive=%s",
                 company.name,
-                ingest.jobs_seen,
-                ingest.new_jobs_created,
+                ingest.jobs_seen_total,
+                ingest.jobs_inserted_total,
+                ingest.jobs_inserted_digest_eligible,
                 ingest.inactive_jobs_marked,
             )
         except Exception as e:
@@ -219,7 +244,9 @@ async def _send_digest_email(
     summary: PipelineSummary,
 ) -> None:
     digest_summary = await run_daily_digest_only(session_factory)
-    summary.digest_jobs_count = digest_summary.digest_jobs_count
+    summary.digest_candidates_count = digest_summary.digest_candidates_count
+    summary.digest_swe_jobs_count = digest_summary.digest_swe_jobs_count
+    summary.digest_entry_level_swe_jobs_count = digest_summary.digest_entry_level_swe_jobs_count
     summary.digest_window = digest_summary.digest_window
     summary.emails_attempted = digest_summary.emails_attempted
     summary.emails_sent = digest_summary.emails_sent
@@ -236,16 +263,19 @@ async def run_scrape_pipeline(
     if send_digest:
         await _send_digest_email(session_factory, summary)
 
+    ing = summary.ingest
     logger.info(
-        "Pipeline complete: scanned=%s jobs_seen=%s new_jobs=%s inactive=%s "
-        "emails_attempted=%s emails_sent=%s scraper_failures=%s email_failures=%s",
+        "Pipeline complete: scanned=%s jobs_seen_total=%s jobs_inserted_total=%s "
+        "new_swe=%s new_entry_level_swe=%s skipped_intl=%s emails_attempted=%s "
+        "digest_candidates=%s scraper_failures=%s",
         summary.companies_scanned,
-        summary.jobs_seen,
-        summary.new_jobs_created,
-        summary.inactive_jobs_marked,
+        ing.jobs_seen_total,
+        ing.jobs_inserted_total,
+        ing.jobs_inserted_software_related,
+        ing.jobs_inserted_digest_eligible,
+        ing.jobs_skipped_international,
         summary.emails_attempted,
-        summary.emails_sent,
+        summary.digest_candidates_count,
         len(summary.scraper_failures),
-        len(summary.email_failures),
     )
     return summary

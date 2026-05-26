@@ -1,6 +1,6 @@
 # job-scraper
 
-Production-style MVP that pulls public job listings from company career systems (Greenhouse, Lever, Ashby, Workday, iCIMS, Gem, SmartRecruiters, or custom Playwright pages), normalizes them, scores them for entry-level / new-grad / SWE I signals, deduplicates with a stable fingerprint, stores them in PostgreSQL, and sends a **daily email digest at 6:00 AM America/Los_Angeles** with jobs **first seen that calendar day** (only entry-level jobs in the digest). Jobs are never repeated in later digests once their `first_seen_at` is in the past.
+Production-style MVP that pulls public job listings from company career systems (Greenhouse, Lever, Ashby, Workday, iCIMS, Gem, SmartRecruiters, or custom Playwright pages), normalizes them, classifies them as **software-engineering-related** and **entry-level/new-grad**, deduplicates with a stable fingerprint, stores them in PostgreSQL, and sends a **daily email digest at 6:00 AM America/Los_Angeles** with jobs **first seen that calendar day**. The digest only includes jobs that are both **SWE-related** and **entry-level** (for example, “Sales Development Representative — New Grad” is excluded). Jobs are never repeated in later digests once their `first_seen_at` is in the past.
 
 **Supported ATS providers:** Greenhouse, Lever, Ashby, Workday, iCIMS, Gem, SmartRecruiters (plus `generic_playwright` for custom pages). Workday, iCIMS, and Gem are more fragile than API-based scrapers because they often depend on rendered HTML or site-specific layouts.
 
@@ -10,8 +10,8 @@ Production-style MVP that pulls public job listings from company career systems 
 - **SQLAlchemy 2.x (async)** + **asyncpg** talk to PostgreSQL.
 - **Scrapers** implement `BaseScraper`: `fetch_raw_jobs()` → `normalize_job()` → `NormalizedJob`.
 - **Ingest** computes a SHA-256 fingerprint, upserts rows, preserves `first_seen_at`, updates `last_seen_at`, and marks jobs inactive when they disappear from a company’s latest scrape.
-- **Filter / scoring** (`filter_service`) uses weighted keyword patterns (easy to tune in one module).
-- **Digest** (`digest_service`) selects rows where `first_seen_at` falls in “today” in `TIMEZONE`, `is_entry_level` is true, groups by company, and builds HTML + plain text.
+- **Filter / scoring** (`filter_service`) applies two independent checks: `is_software_engineering_related` and `is_entry_level_related`. Digest eligibility requires both.
+- **Digest** (`digest_service`) selects rows where `first_seen_at` falls in the digest window, `is_entry_level` and `is_software_engineering_related` are true, groups by company, and builds HTML + plain text.
 - **Email** uses **Resend** (`email_service`).
 - **APScheduler** runs the full pipeline daily at 06:00 in `TIMEZONE` (default `America/Los_Angeles`).
 
@@ -290,7 +290,7 @@ Prefer editing `data/company_targets.csv` and running `scripts/import_company_ta
 
 - **Docker / local API:** APScheduler runs the full pipeline at **06:00** in `TIMEZONE` when `ENABLE_SCHEDULER=true`.
 - **GitHub Actions:** `scrape-every-3-hours.yml` scrapes every 3 hours **and sends a digest email** (entry-level jobs first seen in the last `DIGEST_LOOKBACK_HOURS`, default 4). `daily-digest.yml` is an optional morning catch-up (24h window); disable it if you only want post-scrape emails.
-- After all enabled companies are scraped and ingested, the service loads jobs with `first_seen_at` in the **current local day** and `is_entry_level = true`, sorts by company and title, and sends one email.
+- After all enabled companies are scraped and ingested, the service loads jobs with `first_seen_at` in the digest window, `is_entry_level = true`, and `is_software_engineering_related = true`, then sends one email.
 - **Old jobs never appear again** in the digest: only rows whose `first_seen_at` is that day in `TIMEZONE` are included.
 
 ## Manual scrape
@@ -493,8 +493,10 @@ Use this to test secrets, migrations, Playwright, and email without waiting for 
 1. **Actions** → click a workflow run → click the job (`scrape` or `digest`).
 2. Expand **Apply database migrations**, **Print enabled company count**, **Run scrape cycle**, or **Send daily digest**.
 3. Look for structured blocks:
-   - **Scrape:** `=== SCRAPE CYCLE SUMMARY ===` with `companies_scanned`, `jobs_seen`, `new_jobs_created`, `inactive_jobs_marked`, and `scraper_failures` (also printed as JSON).
-   - **Digest:** `=== DAILY DIGEST SUMMARY ===` with `digest_jobs_count`, `digest_window`, `emails_sent`, and `email_sent_successfully`.
+   - **Scrape:** `=== SCRAPE CYCLE SUMMARY ===` with `jobs_seen_total`, `jobs_inserted_total`, `new_swe_jobs_created`, `new_entry_level_swe_jobs_created`, `jobs_skipped_international`, and `scraper_failures` (also printed as JSON). Legacy fields `jobs_seen` and `new_jobs_created` mirror total/all-inserted counts.
+   - **Digest:** `=== DIGEST EMAIL SUMMARY ===` with `digest_candidates_count`, `digest_entry_level_swe_jobs_count`, `digest_window`, `emails_sent`, and `email_sent_successfully`.
+
+After deploying the SWE filter migration, run `python scripts/recompute_job_filters.py` once to backfill existing jobs.
 4. Per-company lines appear at `INFO` during scrape (`Scraped company=…`).
 5. Failures print `SCRAPER_FAILURE:` or `EMAIL_FAILURE:` on stderr; unhandled exceptions fail the step with a non-zero exit code.
 

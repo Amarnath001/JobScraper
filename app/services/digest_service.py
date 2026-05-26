@@ -10,6 +10,11 @@ from app.core.config import get_settings
 from app.db.models import Job
 from app.utils.dates import end_of_day_local, start_of_day_local, today_in_timezone
 
+_DIGEST_FILTERS = (
+    Job.is_entry_level.is_(True),
+    Job.is_software_engineering_related.is_(True),
+)
+
 
 def _format_posted(posted_at) -> str:
     if posted_at is None:
@@ -25,6 +30,7 @@ class DigestService:
         self._session = session
 
     async def get_todays_new_entry_level_jobs(self) -> list[Job]:
+        """Entry-level SWE jobs first seen today (local timezone)."""
         settings = get_settings()
         tz = settings.timezone
         today: date = today_in_timezone(tz)
@@ -36,7 +42,7 @@ class DigestService:
             .options(joinedload(Job.company))
             .where(
                 and_(
-                    Job.is_entry_level.is_(True),
+                    *_DIGEST_FILTERS,
                     Job.first_seen_at >= start,
                     Job.first_seen_at <= end,
                 )
@@ -47,14 +53,14 @@ class DigestService:
         return list(res.unique().scalars().all())
 
     async def get_entry_level_jobs_first_seen_within_hours(self, hours: int) -> list[Job]:
-        """Entry-level jobs whose first_seen_at is within the last `hours` (UTC)."""
+        """Entry-level SWE jobs whose first_seen_at is within the last `hours` (UTC)."""
         since = datetime.now(timezone.utc) - timedelta(hours=hours)
         stmt = (
             select(Job)
             .options(joinedload(Job.company))
             .where(
                 and_(
-                    Job.is_entry_level.is_(True),
+                    *_DIGEST_FILTERS,
                     Job.first_seen_at >= since,
                 )
             )
@@ -68,7 +74,7 @@ class DigestService:
         """Returns (subject, html, plain_text)."""
         subject = f"New Entry-Level SWE Jobs — {digest_date.isoformat()}"
         if not jobs:
-            return subject, "<p>No new entry-level jobs today.</p>", "No new entry-level jobs today."
+            return subject, "<p>No new entry-level SWE jobs today.</p>", "No new entry-level SWE jobs today."
 
         by_company: dict[str, list[Job]] = defaultdict(list)
         for j in jobs:

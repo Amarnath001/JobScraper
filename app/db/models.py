@@ -50,6 +50,7 @@ class Job(Base):
         Index("ix_jobs_fingerprint_hash", "fingerprint_hash"),
         Index("ix_jobs_first_seen_at", "first_seen_at"),
         Index("ix_jobs_is_entry_level", "is_entry_level"),
+        Index("ix_jobs_is_software_engineering_related", "is_software_engineering_related"),
         Index("ix_jobs_is_active", "is_active"),
         Index("ix_jobs_company_id", "company_id"),
     )
@@ -71,6 +72,9 @@ class Job(Base):
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True, index=True)
     entry_level_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
     is_entry_level: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, index=True)
+    is_software_engineering_related: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, index=True
+    )
     fingerprint_hash: Mapped[str] = mapped_column(String(64), nullable=False, unique=True)
     raw_payload: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, default=dict)
     created_at: Mapped[datetime] = mapped_column(

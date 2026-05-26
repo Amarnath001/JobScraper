@@ -42,6 +42,7 @@ class JobRead(BaseModel):
     is_active: bool
     entry_level_score: float
     is_entry_level: bool
+    is_software_engineering_related: bool
     fingerprint_hash: str
     created_at: datetime
     updated_at: datetime

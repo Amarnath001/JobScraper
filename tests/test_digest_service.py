@@ -33,5 +33,5 @@ def test_digest_build_bodies_groups_and_links() -> None:
 
 def test_digest_empty() -> None:
     subject, html, text = DigestService.build_digest_bodies([], date(2026, 3, 27))
-    assert "No new entry-level jobs today" in html
-    assert "No new entry-level jobs today" in text
+    assert "No new entry-level SWE jobs today" in html
+    assert "No new entry-level SWE jobs today" in text
