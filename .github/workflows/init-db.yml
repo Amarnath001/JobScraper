@@ -35,10 +35,10 @@ jobs:
           set -euo pipefail
           alembic upgrade head
 
-      - name: Import companies from JSON
+      - name: Import company targets from CSV
         run: |
           set -euo pipefail
-          python scripts/import_companies_from_json.py
+          python scripts/import_company_targets.py
 
       - name: Validate company sources
         run: |

@@ -37,10 +37,14 @@ job-scraper/
   tests/
   docker/
   data/
-    companies.json # canonical company list
+    company_targets.csv  # curated company list (primary)
+    companies.json       # legacy JSON import (optional)
   scripts/
     run_scrape_cycle.py
     send_daily_digest.py
+    import_company_targets.py
+    discover_company_source.py
+    discover_unconfigured_companies.py
     import_companies_from_json.py
     validate_companies.py
     seed_companies.py
@@ -71,11 +75,12 @@ docker compose up --build
 ### Import and validate companies
 
 ```bash
-# Upsert from data/companies.json (name + source_type)
-docker compose exec app python scripts/import_companies_from_json.py
+# Upsert from data/company_targets.csv
+docker compose exec app python scripts/import_company_targets.py
 
-# Probe ATS endpoints; disable companies that return HTTP 404
+# Validate enabled companies (default); re-enable those that pass with --enable-valid
 docker compose exec app python scripts/validate_companies.py
+docker compose exec app python scripts/validate_companies.py --all --enable-valid
 ```
 
 Or via API:
@@ -185,9 +190,53 @@ View disabled companies: `GET /admin/companies?enabled=false` (includes `last_er
 
 Re-enable after fixing `source_config` in the DB or JSON, then re-run validation.
 
-## Adding a company
+## Adding 200+ companies
 
-Prefer editing `data/companies.json` and running `scripts/import_companies_from_json.py`, or `POST /admin/companies` with JSON:
+Maintain targets in **`data/company_targets.csv`** (not in Python). Columns:
+
+| Column | Purpose |
+|--------|---------|
+| `name` | Company name (unique with `source_type`) |
+| `category` | e.g. `best_company`, `fortune_500`, `yc_startup`, `ai_startup` |
+| `source_list` | Where you sourced the row (e.g. `fortune_100`, `manual`) |
+| `careers_url` | Public careers page |
+| `source_type` | `greenhouse`, `lever`, `ashby`, `workday`, `generic_playwright`, or empty |
+| `source_config_json` | JSON object, e.g. `{"board_token": "stripe"}` |
+| `priority` | Sort hint (optional metadata) |
+| `enabled` | `true` / `false` |
+
+**Workflow**
+
+1. **Import targets:** `python scripts/import_company_targets.py`
+2. **Dry-run discovery** (no DB writes):
+   ```bash
+   python scripts/discover_unconfigured_companies.py --limit 25 --dry-run
+   ```
+3. **Discover + update DB** (follows job/search links from each careers page):
+   ```bash
+   python scripts/discover_unconfigured_companies.py --limit 25
+   ```
+4. **Validate and enable** companies that probe successfully:
+   ```bash
+   python scripts/validate_companies.py --all --enable-valid
+   ```
+5. **Commit** updated `data/company_targets.csv` when you manually fix rows (optional).
+
+**Single-company discovery** (verbose, no DB update):
+
+```bash
+python scripts/discover_company_source.py "Intuit" "https://jobs.intuit.com/search-jobs"
+```
+
+Discovery inspects the landing page plus up to 5 job-related links (Greenhouse, Lever, Ashby, Workday, iCIMS, etc.). It only sets **supported** configs (`greenhouse`, `lever`, `ashby`) when URLs/tokens are found in HTML — never guessed from company name.
+
+Rows with empty/unsupported ATS stay `unconfigured` with `last_error` explaining what was detected or why discovery failed. The scraper only runs **enabled** companies that pass validation.
+
+Sample CSV includes working Greenhouse/Lever rows from `companies.json` plus disabled Fortune 500 / placeholder startups without fake tokens.
+
+## Adding a company (single)
+
+Prefer editing `data/company_targets.csv` and running `scripts/import_company_targets.py`, or `POST /admin/companies` with JSON:
 
 ```json
 {
@@ -385,8 +434,8 @@ Same steps as the **Init database** workflow, runnable on your machine:
 ```bash
 export DATABASE_URL=postgresql+asyncpg://user:pass@host:5432/dbname
 alembic upgrade head
-python scripts/import_companies_from_json.py
-python scripts/validate_companies.py
+python scripts/import_company_targets.py
+python scripts/validate_companies.py --all --enable-valid
 ```
 
 Alembic reads `DATABASE_URL` from the environment (`alembic/env.py`); it does not use the placeholder URL in `alembic.ini`.

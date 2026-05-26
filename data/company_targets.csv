@@ -1,0 +1,236 @@
+name,category,source_list,careers_url,source_type,source_config_json,priority,enabled
+Amazon,big_tech,fortune_500,https://www.amazon.jobs/,,,1,false
+Anthropic,ai,companies_json_verified,https://boards.greenhouse.io/anthropic,greenhouse,"{""board_token"":""anthropic""}",1,true
+Apple,big_tech,fortune_500,https://www.apple.com/careers/us/,,,1,false
+Google,big_tech,fortune_500,https://careers.google.com/,,,1,false
+Meta,big_tech,fortune_500,https://www.metacareers.com/,,,1,false
+Microsoft,big_tech,fortune_500,https://careers.microsoft.com/,,,1,false
+OpenAI,ai,companies_json_verified,https://boards.greenhouse.io/openai,greenhouse,"{""board_token"":""openai""}",1,true
+NVIDIA,big_tech,fortune_500,https://www.nvidia.com/en-us/about-nvidia/careers/,,,2,false
+Databricks,ai,companies_json_verified,https://boards.greenhouse.io/databricks,greenhouse,"{""board_token"":""databricks""}",3,true
+DeepMind,ai,big_tech,https://deepmind.google/about/careers/,,,3,false
+xAI,ai,unicorn,https://x.ai/careers,,,3,false
+Anysphere,ai,startup,https://anysphere.inc/careers,,,5,false
+Cohere,ai,unicorn,https://cohere.com/careers,,,5,false
+Figma,devtools,companies_json_verified,https://boards.greenhouse.io/figma,greenhouse,"{""board_token"":""figma""}",5,true
+GitHub,devtools,big_tech,https://github.careers/,,,5,false
+Intel,big_tech,fortune_500,https://www.intel.com/content/www/us/en/jobs/jobs-at-intel.html,,,5,false
+Intuit,enterprise,fortune_500,"https://jobs.intuit.com/search-jobs?acm=8698512,68357,68358&alrpm=ALL&ascf=[%7B%22key%22:%22ALL%22,%22value%22:%22%22%7D]",,,5,false
+Perplexity,ai,unicorn,https://www.perplexity.ai/hub/careers,,,5,false
+Salesforce,enterprise,fortune_500,https://careers.salesforce.com/,,,5,false
+Stripe,fintech,companies_json_verified,https://boards.greenhouse.io/stripe,greenhouse,"{""board_token"":""stripe""}",5,true
+Wiz,security,unicorn,https://www.wiz.io/careers,,,5,false
+Adobe,big_tech,fortune_500,https://careers.adobe.com/,,,6,false
+Cloudflare,cloud,companies_json_verified,https://boards.greenhouse.io/cloudflare,greenhouse,"{""board_token"":""cloudflare""}",6,true
+CrowdStrike,security,enterprise,https://www.crowdstrike.com/careers/,,,6,false
+Glean,ai,unicorn,https://www.glean.com/careers,,,6,false
+Hugging Face,ai,unicorn,https://huggingface.co/jobs,,,6,false
+MongoDB,cloud,enterprise,https://www.mongodb.com/careers,,,6,false
+Notion,devtools,companies_json_verified,https://boards.greenhouse.io/notion,greenhouse,"{""board_token"":""notion""}",6,true
+Palantir,big_tech,unicorn,https://www.palantir.com/careers/,,,6,false
+Palo Alto Networks,security,enterprise,https://jobs.paloaltonetworks.com/,,,6,false
+PayPal,fintech,fortune_500,https://careers.pypl.com/,,,6,false
+Scale AI,ai,companies_json_verified,https://boards.greenhouse.io/scaleai,greenhouse,"{""board_token"":""scaleai""}",6,true
+Snowflake,cloud,companies_json_verified,https://boards.greenhouse.io/snowflake,greenhouse,"{""board_token"":""snowflake""}",6,true
+Uber,big_tech,unicorn,https://www.uber.com/us/en/careers/,,,6,false
+Vercel,devtools,companies_json_verified,https://boards.greenhouse.io/vercel,greenhouse,"{""board_token"":""vercel""}",6,true
+Waymo,ai,unicorn,https://waymo.com/careers/,,,6,false
+Ramp,fintech,companies_json_verified,https://boards.greenhouse.io/ramp,greenhouse,"{""board_token"":""ramp""}",7,true
+1Password,security,unicorn,https://1password.com/careers,,,8,false
+Airbnb,big_tech,companies_json_verified,https://boards.greenhouse.io/airbnb,greenhouse,"{""board_token"":""airbnb""}",8,true
+AMD,big_tech,fortune_500,https://careers.amd.com/,,,8,false
+Anduril,security,unicorn,https://www.anduril.com/careers/,,,8,false
+Atlassian,devtools,companies_json_verified,https://jobs.lever.co/atlassian,lever,"{""company"":""atlassian""}",8,true
+Brex,fintech,companies_json_verified,https://boards.greenhouse.io/brex,greenhouse,"{""board_token"":""brex""}",8,true
+ByteDance,big_tech,unicorn,https://jobs.bytedance.com/,,,8,false
+Capital One,fintech,fortune_500,https://www.capitalonecareers.com/,,,8,false
+Character.AI,ai,unicorn,https://character.ai/careers,,,8,false
+Cisco,enterprise,fortune_500,https://jobs.cisco.com/,,,8,false
+Coinbase,fintech,companies_json_verified,https://boards.greenhouse.io/coinbase,greenhouse,"{""board_token"":""coinbase""}",8,true
+Confluent,infra,unicorn,https://careers.confluent.io/,,,8,false
+Deel,enterprise,unicorn,https://www.deel.com/careers,,,8,false
+DoorDash,big_tech,companies_json_verified,https://boards.greenhouse.io/doordash,greenhouse,"{""board_token"":""doordash""}",8,true
+ElevenLabs,ai,unicorn,https://elevenlabs.io/careers,,,8,false
+Fortinet,security,enterprise,https://www.fortinet.com/corporate/careers,,,8,false
+Harvey,ai,unicorn,https://www.harvey.ai/careers,,,8,false
+IBM,enterprise,fortune_500,https://www.ibm.com/careers,,,8,false
+Linear,devtools,startup,https://linear.app/careers,,,8,false
+LinkedIn,big_tech,unicorn,https://careers.linkedin.com/,,,8,false
+Mercury,fintech,unicorn,https://mercury.com/jobs,,,8,false
+Netflix,big_tech,companies_json_verified,https://jobs.lever.co/netflix,lever,"{""company"":""netflix""}",8,true
+Oracle,enterprise,fortune_500,https://www.oracle.com/careers/,,,8,false
+Plaid,fintech,companies_json_verified,https://boards.greenhouse.io/plaid,greenhouse,"{""board_token"":""plaid""}",8,true
+Qualcomm,big_tech,fortune_500,https://careers.qualcomm.com/,,,8,false
+Remote,enterprise,unicorn,https://remote.com/careers,,,8,false
+Robinhood,fintech,companies_json_verified,https://boards.greenhouse.io/robinhood,greenhouse,"{""board_token"":""robinhood""}",8,true
+Roblox,big_tech,unicorn,https://careers.roblox.com/,,,8,false
+Runway,ai,unicorn,https://runwayml.com/careers/,,,8,false
+SentinelOne,security,enterprise,https://www.sentinelone.com/careers/,,,8,false
+ServiceNow,enterprise,fortune_500,https://careers.servicenow.com/,,,8,false
+Shopify,enterprise,companies_json_verified,https://boards.greenhouse.io/shopify,greenhouse,"{""board_token"":""shopify""}",8,true
+Sierra,ai,startup,https://sierra.ai/careers,,,8,false
+Snap,big_tech,unicorn,https://careers.snap.com/,,,8,false
+Snyk,security,unicorn,https://snyk.io/careers/,,,8,false
+SoFi,fintech,unicorn,https://www.sofi.com/careers/,,,8,false
+SpaceX,big_tech,unicorn,https://www.spacex.com/careers/,,,8,false
+Spotify,big_tech,unicorn,https://www.lifeatspotify.com/jobs,,,8,false
+Supabase,devtools,unicorn,https://supabase.com/careers,,,8,false
+Tailscale,security,unicorn,https://tailscale.com/careers,,,8,false
+Tesla,big_tech,fortune_500,https://www.tesla.com/careers,,,8,false
+TikTok,big_tech,unicorn,https://careers.tiktok.com/,,,8,false
+Weights & Biases,ai,unicorn,https://wandb.ai/careers,,,8,false
+Workday,enterprise,fortune_500,https://www.workday.com/en-us/company/careers.html,,,8,false
+Zscaler,security,enterprise,https://www.zscaler.com/careers,,,8,false
+Adept,ai,unicorn,https://www.adept.ai/careers,,,10,false
+Adyen,fintech,unicorn,https://careers.adyen.com/,,,10,false
+Airtable,devtools,companies_json_verified,https://boards.greenhouse.io/airtable,greenhouse,"{""board_token"":""airtable""}",10,true
+American Express,fintech,fortune_500,https://www.americanexpress.com/en-us/careers/,,,10,false
+Asana,enterprise,companies_json_verified,https://boards.greenhouse.io/asana,greenhouse,"{""board_token"":""asana""}",10,true
+Aurora,ai,unicorn,https://aurora.tech/careers,,,10,false
+Autodesk,devtools,fortune_500,https://www.autodesk.com/careers,,,10,false
+Bank of America,fintech,fortune_500,https://careers.bankofamerica.com/,,,10,false
+Block,fintech,companies_json_verified,https://boards.greenhouse.io/block,greenhouse,"{""board_token"":""block""}",10,true
+Canva,devtools,companies_json_verified,https://boards.greenhouse.io/canva,greenhouse,"{""board_token"":""canva""}",10,true
+Chime,fintech,companies_json_verified,https://boards.greenhouse.io/chime,greenhouse,"{""board_token"":""chime""}",10,true
+Citigroup,fintech,fortune_500,https://jobs.citi.com/,,,10,false
+Cruise,ai,unicorn,https://www.getcruise.com/careers,,,10,false
+Datadog,devtools,companies_json_verified,https://boards.greenhouse.io/datadog,greenhouse,"{""board_token"":""datadog""}",10,true
+Dell Technologies,enterprise,fortune_500,https://jobs.dell.com/,,,10,false
+DigitalOcean,cloud,enterprise,https://www.digitalocean.com/careers,,,10,false
+Discord,big_tech,companies_json_verified,https://boards.greenhouse.io/discord,greenhouse,"{""board_token"":""discord""}",10,true
+Docker,devtools,enterprise,https://www.docker.com/careers/,,,10,false
+Dropbox,cloud,companies_json_verified,https://jobs.lever.co/dropbox,lever,"{""company"":""dropbox""}",10,true
+Duolingo,big_tech,unicorn,https://careers.duolingo.com/,,,10,false
+eBay,big_tech,fortune_500,https://careers.ebayinc.com/,,,10,false
+Epic Games,big_tech,unicorn,https://www.epicgames.com/site/en-US/careers,,,10,false
+Flexport,enterprise,unicorn,https://www.flexport.com/careers/,,,10,false
+GitLab,devtools,companies_json_verified,https://boards.greenhouse.io/gitlab,greenhouse,"{""board_token"":""gitlab""}",10,true
+Goldman Sachs,fintech,fortune_500,https://www.goldmansachs.com/careers/,,,10,false
+HashiCorp,infra,companies_json_verified,https://boards.greenhouse.io/hashicorp,greenhouse,"{""board_token"":""hashicorp""}",10,true
+Instacart,big_tech,companies_json_verified,https://boards.greenhouse.io/instacart,greenhouse,"{""board_token"":""instacart""}",10,true
+JetBrains,devtools,enterprise,https://www.jetbrains.com/careers/,,,10,false
+JPMorgan Chase,fintech,fortune_500,https://careers.jpmorgan.com/,,,10,false
+Klarna,fintech,unicorn,https://www.klarna.com/careers/,,,10,false
+LaunchDarkly,devtools,unicorn,https://launchdarkly.com/careers/,,,10,false
+Lyft,big_tech,companies_json_verified,https://boards.greenhouse.io/lyft,greenhouse,"{""board_token"":""lyft""}",10,true
+Mastercard,fintech,fortune_500,https://careers.mastercard.com/,,,10,false
+Midjourney,ai,unicorn,https://www.midjourney.com/careers/,,,10,false
+Morgan Stanley,fintech,fortune_500,https://www.morganstanley.com/careers,,,10,false
+Navan,enterprise,unicorn,https://navan.com/careers,,,10,false
+New Relic,devtools,enterprise,https://newrelic.com/careers,,,10,false
+Nubank,fintech,unicorn,https://nubank.com.br/careers/,,,10,false
+Nuro,ai,unicorn,https://www.nuro.ai/careers,,,10,false
+Okta,security,companies_json_verified,https://boards.greenhouse.io/okta,greenhouse,"{""board_token"":""okta""}",10,true
+PostHog,devtools,companies_json_verified,https://jobs.lever.co/posthog,lever,"{""company"":""posthog""}",10,true
+Pulumi,devtools,unicorn,https://www.pulumi.com/careers/,,,10,false
+Red Hat,cloud,enterprise,https://www.redhat.com/en/jobs,,,10,false
+Reddit,big_tech,companies_json_verified,https://boards.greenhouse.io/reddit,greenhouse,"{""board_token"":""reddit""}",10,true
+Redis,infra,unicorn,https://redis.io/careers/,,,10,false
+Retool,devtools,companies_json_verified,https://boards.greenhouse.io/retool,greenhouse,"{""board_token"":""retool""}",10,true
+Revolut,fintech,unicorn,https://www.revolut.com/careers/,,,10,false
+Rippling,enterprise,companies_json_verified,https://boards.greenhouse.io/rippling,greenhouse,"{""board_token"":""rippling""}",10,true
+Rivian,big_tech,unicorn,https://careers.rivian.com/,,,10,false
+Rubrik,security,unicorn,https://www.rubrik.com/company/careers,,,10,false
+Samsara,infra,companies_json_verified,https://jobs.lever.co/samsara,lever,"{""company"":""samsara""}",10,true
+Samsung Electronics,big_tech,fortune_500,https://www.samsung.com/us/careers/,,,10,false
+SAP,enterprise,fortune_500,https://jobs.sap.com/,,,10,false
+Sentry,devtools,companies_json_verified,https://jobs.lever.co/sentry,lever,"{""company"":""sentry""}",10,true
+Slack,enterprise,companies_json_verified,https://jobs.lever.co/slack,lever,"{""company"":""slack""}",10,true
+Splunk,security,enterprise,https://www.splunk.com/en_us/careers.html,,,10,false
+Square,fintech,companies_json_verified,https://boards.greenhouse.io/square,greenhouse,"{""board_token"":""square""}",10,true
+Temporal,infra,unicorn,https://temporal.io/careers,,,10,false
+Toast,fintech,unicorn,https://careers.toasttab.com/,,,10,false
+Twitch,big_tech,unicorn,https://www.twitch.tv/jobs/,,,10,false
+Visa,fintech,fortune_500,https://careers.smartrecruiters.com/Visa,,,10,false
+Wise,fintech,unicorn,https://wise.jobs/,,,10,false
+Zoom,enterprise,unicorn,https://careers.zoom.us/,,,10,false
+Affirm,fintech,companies_json_verified,https://boards.greenhouse.io/affirm,greenhouse,"{""board_token"":""affirm""}",12,true
+Akamai,cloud,enterprise,https://www.akamai.com/careers,,,12,false
+Algolia,devtools,companies_json_verified,https://jobs.lever.co/algolia,lever,"{""company"":""algolia""}",12,true
+Amplitude,devtools,companies_json_verified,https://jobs.lever.co/amplitude,lever,"{""company"":""amplitude""}",12,true
+Ashby,devtools,startup,https://www.ashbyhq.com/careers,,,12,false
+AT&T,enterprise,fortune_500,https://www.att.jobs/,,,12,false
+Bilt Rewards,fintech,unicorn,https://www.biltrewards.com/careers,,,12,false
+BlackRock,fintech,fortune_500,https://careers.blackrock.com/,,,12,false
+Boeing,enterprise,fortune_500,https://jobs.boeing.com/,,,12,false
+Broadcom,big_tech,fortune_500,https://www.broadcom.com/company/careers,,,12,false
+Calendly,enterprise,unicorn,https://careers.calendly.com/,,,12,false
+Carta,fintech,companies_json_verified,https://jobs.lever.co/carta,lever,"{""company"":""carta""}",12,true
+Checkout.com,fintech,unicorn,https://www.checkout.com/careers,,,12,false
+Chronosphere,devtools,unicorn,https://chronosphere.io/careers/,,,12,false
+CircleCI,devtools,companies_json_verified,https://jobs.lever.co/circleci,lever,"{""company"":""circleci""}",12,true
+Descript,ai,startup,https://www.descript.com/careers,,,12,false
+Disney,big_tech,fortune_500,https://jobs.disneycareers.com/,,,12,false
+Drata,security,companies_json_verified,https://jobs.lever.co/drata,lever,"{""company"":""drata""}",12,true
+Elastic,devtools,companies_json_verified,https://boards.greenhouse.io/elastic,greenhouse,"{""board_token"":""elastic""}",12,true
+Etsy,big_tech,enterprise,https://careers.etsy.com/,,,12,false
+Faire,enterprise,unicorn,https://www.faire.com/careers,,,12,false
+Fastly,cloud,enterprise,https://www.fastly.com/about/careers,,,12,false
+Fidelity Investments,fintech,fortune_500,https://jobs.fidelity.com/,,,12,false
+Fly.io,infra,startup,https://fly.io/jobs/,,,12,false
+Grammarly,ai,companies_json_verified,https://boards.greenhouse.io/grammarly,greenhouse,"{""board_token"":""grammarly""}",12,true
+Hebbia,ai,startup,https://www.hebbia.ai/careers,,,12,false
+Honeycomb,devtools,unicorn,https://www.honeycomb.io/careers/,,,12,false
+HP Inc,enterprise,fortune_500,https://jobs.hp.com/,,,12,false
+HubSpot,enterprise,companies_json_verified,https://boards.greenhouse.io/hubspot,greenhouse,"{""board_token"":""hubspot""}",12,true
+Intercom,enterprise,companies_json_verified,https://boards.greenhouse.io/intercom,greenhouse,"{""board_token"":""intercom""}",12,true
+Kong,infra,unicorn,https://konghq.com/careers,,,12,false
+Lacework,security,unicorn,https://www.lacework.com/careers,,,12,false
+Lockheed Martin,security,fortune_500,https://www.lockheedmartinjobs.com/,,,12,false
+Loom,devtools,unicorn,https://www.loom.com/careers,,,12,false
+Lucid Motors,big_tech,unicorn,https://lucidmotors.com/careers,,,12,false
+Marqeta,fintech,unicorn,https://www.marqeta.com/company/careers,,,12,false
+Micron Technology,big_tech,fortune_500,https://www.micron.com/about/careers,,,12,false
+Miro,devtools,companies_json_verified,https://boards.greenhouse.io/miro,greenhouse,"{""board_token"":""miro""}",12,true
+Neon,infra,startup,https://neon.tech/careers,,,12,false
+Northrop Grumman,security,fortune_500,https://www.northropgrumman.com/jobs/,,,12,false
+Pinterest,big_tech,companies_json_verified,https://boards.greenhouse.io/pinterest,greenhouse,"{""board_token"":""pinterest""}",12,true
+PlanetScale,infra,unicorn,https://planetscale.com/careers,,,12,false
+Render,cloud,startup,https://render.com/careers,,,12,false
+Replicate,ai,startup,https://replicate.com/careers,,,12,false
+Sony,big_tech,fortune_500,https://www.sony.com/en/SonyInfo/Careers/,,,12,false
+T-Mobile,enterprise,fortune_500,https://careers.t-mobile.com/,,,12,false
+Texas Instruments,big_tech,fortune_500,https://careers.ti.com/,,,12,false
+Twilio,cloud,companies_json_verified,https://boards.greenhouse.io/twilio,greenhouse,"{""board_token"":""twilio""}",12,true
+Unity,devtools,enterprise,https://careers.unity.com/,,,12,false
+Verizon,enterprise,fortune_500,https://www.verizon.com/about/careers,,,12,false
+VMware,cloud,enterprise,https://careers.vmware.com/,,,12,false
+Wayfair,big_tech,enterprise,https://www.aboutwayfair.com/careers,,,12,false
+Webflow,devtools,companies_json_verified,https://boards.greenhouse.io/webflow,greenhouse,"{""board_token"":""webflow""}",12,true
+Wells Fargo,fintech,fortune_500,https://www.wellsfargojobs.com/,,,12,false
+Zapier,devtools,companies_json_verified,https://boards.greenhouse.io/zapier,greenhouse,"{""board_token"":""zapier""}",12,true
+Applied Materials,big_tech,fortune_500,https://www.appliedmaterials.com/us/en/careers.html,,,14,false
+ASML,big_tech,fortune_500,https://www.asml.com/en/careers,,,14,false
+BambooHR,enterprise,unicorn,https://www.bamboohr.com/careers/,,,14,false
+Benchling,devtools,companies_json_verified,https://jobs.lever.co/benchling,lever,"{""company"":""benchling""}",14,true
+Charles Schwab,fintech,fortune_500,https://www.schwabjobs.com/,,,14,false
+Chewy,big_tech,enterprise,https://careers.chewy.com/,,,14,false
+ClickUp,devtools,companies_json_verified,https://boards.greenhouse.io/clickup,greenhouse,"{""board_token"":""clickup""}",14,true
+Coalition,security,unicorn,https://www.coalitioninc.com/careers,,,14,false
+Ford Motor Company,enterprise,fortune_500,https://corporate.ford.com/careers.html,,,14,false
+General Electric,enterprise,fortune_500,https://jobs.gecareers.com/,,,14,false
+General Motors,enterprise,fortune_500,https://search-careers.gm.com/,,,14,false
+Gong,enterprise,companies_json_verified,https://jobs.lever.co/gong,lever,"{""company"":""gong""}",14,true
+Greenhouse,enterprise,unicorn,https://www.greenhouse.com/careers,,,14,false
+Gusto,enterprise,companies_json_verified,https://boards.greenhouse.io/gusto,greenhouse,"{""board_token"":""gusto""}",14,true
+Honeywell,enterprise,fortune_500,https://careers.honeywell.com/,,,14,false
+Johnson & Johnson,enterprise,fortune_500,https://www.careers.jnj.com/,,,14,false
+Lattice,enterprise,companies_json_verified,https://jobs.lever.co/lattice,lever,"{""company"":""lattice""}",14,true
+Monday,enterprise,companies_json_verified,https://boards.greenhouse.io/monday,greenhouse,"{""board_token"":""monday""}",14,true
+Nike,enterprise,fortune_500,https://careers.nike.com/,,,14,false
+PagerDuty,devtools,companies_json_verified,https://boards.greenhouse.io/pagerduty,greenhouse,"{""board_token"":""pagerduty""}",14,true
+Segment,devtools,companies_json_verified,https://boards.greenhouse.io/segment,greenhouse,"{""board_token"":""segment""}",14,true
+Siemens,enterprise,fortune_500,https://jobs.siemens.com/,,,14,false
+Target,enterprise,fortune_500,https://corporate.target.com/careers,,,14,false
+UnitedHealth Group,enterprise,fortune_500,https://careers.unitedhealthgroup.com/,,,14,false
+Walmart,enterprise,fortune_500,https://careers.walmart.com/,,,14,false
+Y Combinator,yc,yc,https://www.ycombinator.com/careers,,,15,false
+Costco,enterprise,fortune_500,https://www.costco.com/jobs.html,,,16,false
+CVS Health,enterprise,fortune_500,https://jobs.cvshealth.com/,,,16,false
+Lever,enterprise,unicorn,https://www.lever.co/careers/,,,16,false
+Pfizer,enterprise,fortune_500,https://www.pfizer.com/about/careers,,,16,false
+Procter & Gamble,enterprise,fortune_500,https://www.pgcareers.com/,,,16,false
+Atlassian Software,devtools,curated,https://www.atlassian.com/company/careers,,,20,false
+HashiCorp Terraform,infra,curated,https://www.hashicorp.com/careers,,,20,false
+PagerDuty Ops,devtools,curated,https://careers.pagerduty.com/,,,20,false
+Slack Salesforce,enterprise,curated,https://salesforce.wd12.myworkdayjobs.com/Slack,,,20,false

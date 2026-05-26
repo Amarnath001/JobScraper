@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import get_settings
 from app.db.models import Company
+from app.services.company_targets_service import UNCONFIGURED_SOURCE_TYPE
 from app.utils.source_urls import validation_url_for
 
 logger = logging.getLogger(__name__)
@@ -139,12 +140,14 @@ def apply_probe_to_company(
     probe: ValidationProbeResult,
     *,
     disable_on_404: bool,
+    re_enable_valid: bool = False,
 ) -> None:
     company.last_validated_at = _now()
     company.last_validation_status = str(probe.status_code) if probe.status_code is not None else "error"
 
     if probe.valid:
-        company.enabled = True
+        if re_enable_valid:
+            company.enabled = True
         company.consecutive_failures = 0
         company.last_error = None
         company.last_validation_status = "200"
@@ -187,8 +190,9 @@ def _tally_summary(
 async def validate_all_companies(
     session: AsyncSession,
     *,
-    only_enabled: bool = False,
+    only_enabled: bool = True,
     disable_on_404: bool = True,
+    re_enable_valid: bool = False,
 ) -> ValidationRunSummary:
     stmt = select(Company).order_by(Company.name)
     if only_enabled:
@@ -198,8 +202,27 @@ async def validate_all_companies(
 
     summary = ValidationRunSummary()
     for company in companies:
+        if company.source_type == UNCONFIGURED_SOURCE_TYPE:
+            summary.skipped_count += 1
+            summary.results.append(
+                ValidationProbeResult(
+                    company_name=company.name,
+                    source_type=company.source_type,
+                    status_code=None,
+                    valid=False,
+                    error="unconfigured source (run discover/import first)",
+                    url=None,
+                )
+            )
+            continue
+
         probe = await probe_company_source(company)
-        apply_probe_to_company(company, probe, disable_on_404=disable_on_404)
+        apply_probe_to_company(
+            company,
+            probe,
+            disable_on_404=disable_on_404,
+            re_enable_valid=re_enable_valid,
+        )
         _tally_summary(summary, probe, disable_on_404=disable_on_404)
 
     await session.flush()
