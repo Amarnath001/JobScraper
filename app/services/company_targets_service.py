@@ -26,7 +26,16 @@ REQUIRED_COLUMNS = (
 )
 
 SCRAPER_SOURCE_TYPES = frozenset(
-    {"greenhouse", "lever", "ashby", "workday", "generic_playwright"}
+    {
+        "greenhouse",
+        "lever",
+        "ashby",
+        "workday",
+        "icims",
+        "gem",
+        "smartrecruiters",
+        "generic_playwright",
+    }
 )
 UNCONFIGURED_SOURCE_TYPE = "unconfigured"
 NEEDS_ATS_ERROR = "Needs ATS/source config"

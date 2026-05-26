@@ -138,6 +138,24 @@ def _first_group(pattern: str, text: str) -> str | None:
     return match.group(1) if match else None
 
 
+def _normalize_workday_careers_url(url: str) -> str:
+    parsed = urlparse(url.strip())
+    path = parsed.path.rstrip("/")
+    if path.lower().endswith("/login"):
+        path = path[: -len("/login")]
+    return urlunparse((parsed.scheme, parsed.netloc, path or "/", "", "", ""))
+
+
+def _normalize_icims_careers_url(url: str) -> str:
+    parsed = urlparse(url.strip())
+    if "login" in parsed.path.lower():
+        base = f"{parsed.scheme}://{parsed.netloc}"
+        return f"{base}/jobs"
+    if "/jobs" not in parsed.path.lower():
+        return f"{parsed.scheme}://{parsed.netloc}/jobs"
+    return url.split("?")[0].rstrip("/")
+
+
 def collect_ats_candidates(text: str, page_url: str) -> list[ATSDiscoveryCandidate]:
     """Scan page HTML + URL for ATS signatures."""
     blob = f"{text}\n{page_url}"
@@ -204,43 +222,49 @@ def collect_ats_candidates(text: str, page_url: str) -> list[ATSDiscoveryCandida
             )
         )
     if m := _first_group(r"(https?://[a-z0-9.-]*\.myworkdayjobs\.com/[^\"'\s<>]+)", blob):
+        wd_url = _normalize_workday_careers_url(m.rstrip("/"))
         found.append(
             ATSDiscoveryCandidate(
                 "workday",
                 90,
-                None,
-                {"careers_url": m.rstrip("/"), "page_url": m.rstrip("/")},
-                f"Workday host: {m}",
+                "workday",
+                {"careers_url": wd_url},
+                f"Workday host: {wd_url}",
             )
         )
-    if m := _first_group(r"(https?://jobs\.smartrecruiters\.com/[a-z0-9_-]+)", blob):
+    if slug := _first_group(r"jobs\.smartrecruiters\.com/([a-z0-9_-]+)", blob):
         found.append(
             ATSDiscoveryCandidate(
                 "smartrecruiters",
                 88,
-                None,
-                {"careers_url": m.rstrip("/")},
-                f"SmartRecruiters board: {m}",
+                "smartrecruiters",
+                {
+                    "company": slug,
+                    "careers_url": f"https://jobs.smartrecruiters.com/{slug}",
+                },
+                f"SmartRecruiters board: {slug}",
             )
         )
     if m := _first_group(r"(https?://[a-z0-9.-]*\.icims\.com[^\"'\s<>]*)", blob):
+        icims_url = _normalize_icims_careers_url(m.rstrip("/"))
         found.append(
             ATSDiscoveryCandidate(
                 "icims",
                 85,
-                None,
-                {"careers_url": m.rstrip("/")},
-                f"iCIMS URL: {m}",
+                "icims",
+                {"careers_url": icims_url},
+                f"iCIMS URL: {icims_url}",
             )
         )
-    if m := _first_group(r"(https?://jobs\.gem\.com/[^\"'\s<>]+)", blob):
+    if company_slug := _first_group(r"jobs\.gem\.com/([a-z0-9_-]+)", blob):
+        gem_base = f"https://jobs.gem.com/{company_slug}"
         found.append(
             ATSDiscoveryCandidate(
                 "gem",
                 84,
-                None,
-                {"careers_url": m.rstrip("/")},
-                f"Gem jobs URL: {m}",
+                "gem",
+                {"careers_url": gem_base},
+                f"Gem jobs board: {gem_base}",
             )
         )
     if "taleo.net" in blob.lower():

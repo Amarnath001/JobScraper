@@ -9,9 +9,12 @@ from app.core.email_validation import validate_email_config
 from app.db.models import Company
 from app.scrapers.ashby import AshbyScraper
 from app.scrapers.base import BaseScraper
+from app.scrapers.gem import GemScraper
 from app.scrapers.generic_playwright import GenericPlaywrightScraper
 from app.scrapers.greenhouse import GreenhouseScraper
+from app.scrapers.icims import ICIMSScraper
 from app.scrapers.lever import LeverScraper
+from app.scrapers.smartrecruiters import SmartRecruitersScraper
 from app.scrapers.workday import WorkdayScraper
 from app.services.digest_service import DigestService
 from app.services.email_service import EmailService
@@ -28,6 +31,9 @@ def build_scraper(company: Company) -> BaseScraper:
         "lever": LeverScraper,
         "ashby": AshbyScraper,
         "workday": WorkdayScraper,
+        "icims": ICIMSScraper,
+        "gem": GemScraper,
+        "smartrecruiters": SmartRecruitersScraper,
         "generic_playwright": GenericPlaywrightScraper,
     }
     cls = mapping.get(company.source_type)

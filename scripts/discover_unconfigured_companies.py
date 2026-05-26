@@ -29,7 +29,7 @@ from app.services.ats_discovery_service import (
     discover_careers_site,
     format_company_discovery_line,
 )
-from app.services.company_targets_service import UNCONFIGURED_SOURCE_TYPE
+from app.services.company_targets_service import SCRAPER_SOURCE_TYPES, UNCONFIGURED_SOURCE_TYPE
 from app.services.company_validation_service import probe_company_source
 from app.utils.source_urls import careers_url_for
 
@@ -75,11 +75,7 @@ async def _persist_result(
         if db_company is None:
             return False
 
-        if bucket == "configured_supported" and result.source_type in (
-            "greenhouse",
-            "lever",
-            "ashby",
-        ):
+        if bucket == "configured_supported" and result.source_type in SCRAPER_SOURCE_TYPES:
             db_company.source_type = result.source_type
             db_company.source_config = dict(result.source_config)
             careers = result.final_careers_url or db_company.careers_url

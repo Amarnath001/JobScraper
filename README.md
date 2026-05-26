@@ -1,6 +1,8 @@
 # job-scraper
 
-Production-style MVP that pulls public job listings from company career systems (Greenhouse, Lever, Ashby, Workday, or custom Playwright pages), normalizes them, scores them for entry-level / new-grad / SWE I signals, deduplicates with a stable fingerprint, stores them in PostgreSQL, and sends a **daily email digest at 6:00 AM America/Los_Angeles** with jobs **first seen that calendar day** (only entry-level jobs in the digest). Jobs are never repeated in later digests once their `first_seen_at` is in the past.
+Production-style MVP that pulls public job listings from company career systems (Greenhouse, Lever, Ashby, Workday, iCIMS, Gem, SmartRecruiters, or custom Playwright pages), normalizes them, scores them for entry-level / new-grad / SWE I signals, deduplicates with a stable fingerprint, stores them in PostgreSQL, and sends a **daily email digest at 6:00 AM America/Los_Angeles** with jobs **first seen that calendar day** (only entry-level jobs in the digest). Jobs are never repeated in later digests once their `first_seen_at` is in the past.
+
+**Supported ATS providers:** Greenhouse, Lever, Ashby, Workday, iCIMS, Gem, SmartRecruiters (plus `generic_playwright` for custom pages). Workday, iCIMS, and Gem are more fragile than API-based scrapers because they often depend on rendered HTML or site-specific layouts.
 
 ## Architecture
 
@@ -30,7 +32,7 @@ job-scraper/
     core/          # config, logging, database, scheduler
     db/            # models, session, base
     schemas/       # pydantic models
-    scrapers/      # greenhouse, lever, ashby, workday, generic_playwright
+    scrapers/      # greenhouse, lever, ashby, workday, icims, gem, smartrecruiters, generic_playwright
     services/      # ingest, filter, dedupe, digest, email, scrape runner, company
     utils/         # hashing, text, dates
   alembic/         # migrations
@@ -200,7 +202,7 @@ Maintain targets in **`data/company_targets.csv`** (not in Python). Columns:
 | `category` | e.g. `best_company`, `fortune_500`, `yc_startup`, `ai_startup` |
 | `source_list` | Where you sourced the row (e.g. `fortune_100`, `manual`) |
 | `careers_url` | Public careers page |
-| `source_type` | `greenhouse`, `lever`, `ashby`, `workday`, `generic_playwright`, or empty |
+| `source_type` | `greenhouse`, `lever`, `ashby`, `workday`, `icims`, `gem`, `smartrecruiters`, `generic_playwright`, or empty |
 | `source_config_json` | JSON object, e.g. `{"board_token": "stripe"}` |
 | `priority` | Sort hint (optional metadata) |
 | `enabled` | `true` / `false` |
@@ -228,7 +230,7 @@ Maintain targets in **`data/company_targets.csv`** (not in Python). Columns:
 python scripts/discover_company_source.py "Intuit" "https://jobs.intuit.com/search-jobs"
 ```
 
-Discovery inspects the landing page plus up to 5 job-related links (Greenhouse, Lever, Ashby, Workday, iCIMS, etc.). It only sets **supported** configs (`greenhouse`, `lever`, `ashby`) when URLs/tokens are found in HTML — never guessed from company name.
+Discovery inspects the landing page plus up to 5 job-related links (Greenhouse, Lever, Ashby, Workday, iCIMS, Gem, SmartRecruiters, etc.). It only sets **supported** configs when URLs/tokens/slugs are found in HTML — never guessed from company name. Oracle, Taleo, and Eightfold are detected but not auto-enabled until scrapers exist.
 
 Rows with empty/unsupported ATS stay `unconfigured` with `last_error` explaining what was detected or why discovery failed. The scraper only runs **enabled** companies that pass validation.
 

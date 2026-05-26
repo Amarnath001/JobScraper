@@ -29,12 +29,12 @@ def test_no_candidates_returns_unknown_result() -> None:
     assert classify_discovery_bucket(result) == "still_unknown"
 
 
-def test_unsupported_provider_returns_detected_unsupported() -> None:
+def test_workday_provider_returns_configured_supported() -> None:
     candidates = [
         ATSDiscoveryCandidate(
             "workday",
             90,
-            None,
+            "workday",
             {"careers_url": "https://nvidia.wd5.myworkdayjobs.com/en-US/NVIDIAExternalCareerSite"},
             "Workday host detected",
         )
@@ -44,9 +44,28 @@ def test_unsupported_provider_returns_detected_unsupported() -> None:
         ["https://www.nvidia.com/careers/"],
         "https://www.nvidia.com/careers/",
     )
-    assert not result.supported
-    assert result.provider_detected == "workday"
+    assert result.supported
     assert result.source_type == "workday"
+    assert classify_discovery_bucket(result) == "configured_supported"
+
+
+def test_unsupported_provider_returns_detected_unsupported() -> None:
+    candidates = [
+        ATSDiscoveryCandidate(
+            "oracle",
+            86,
+            None,
+            {"careers_url": "https://egug.fa.us2.oraclecloud.com/hcmUI/CandidateExperience"},
+            "Oracle HCM detected",
+        )
+    ]
+    result = _result_from_candidates(
+        candidates,
+        ["https://www.example.com/careers/"],
+        "https://www.example.com/careers/",
+    )
+    assert not result.supported
+    assert result.provider_detected == "oracle"
     assert classify_discovery_bucket(result) == "detected_unsupported"
 
 
@@ -79,12 +98,13 @@ def test_discover_greenhouse_from_embedded_board() -> None:
     assert result.source_config == {"board_token": "acme"}
 
 
-def test_discover_gem_unsupported() -> None:
+def test_discover_gem_supported() -> None:
     html = '<a href="https://jobs.gem.com/bilt/4509720004">Jobs</a>'
     result = discover_ats_from_html(html, "https://www.bilt.com/careers")
-    assert not result.supported
-    assert result.provider_detected == "gem"
-    assert classify_discovery_bucket(result) == "detected_unsupported"
+    assert result.supported
+    assert result.source_type == "gem"
+    assert result.source_config["careers_url"] == "https://jobs.gem.com/bilt"
+    assert classify_discovery_bucket(result) == "configured_supported"
 
 
 def test_summary_bucket_for_fetch_failure() -> None:

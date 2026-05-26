@@ -11,8 +11,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import get_settings
 from app.db.models import Company
+from app.scrapers.parsing import looks_like_job_board
 from app.services.company_targets_service import UNCONFIGURED_SOURCE_TYPE
-from app.utils.source_urls import validation_url_for
+from app.utils.source_urls import validation_expects_json, validation_url_for
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +28,7 @@ class ValidationProbeResult:
     source_type: str
     status_code: int | None
     valid: bool
-    error: str | None = None
+    error: str = ""
     url: str | None = None
 
 
@@ -61,9 +62,48 @@ def invalid_source_detail(company: Company, exc: BaseException | None = None) ->
     if company.source_type == "ashby":
         org = company.source_config.get("organization") or company.source_config.get("org") or "?"
         return f"Ashby organization {org} returned 404"
+    if company.source_type == "smartrecruiters":
+        slug = company.source_config.get("company", "?")
+        return f"SmartRecruiters company {slug} returned 404"
+    if company.source_type == "workday":
+        return f"Workday careers_url returned 404"
+    if company.source_type == "icims":
+        return f"iCIMS careers_url returned 404"
+    if company.source_type == "gem":
+        return f"Gem careers_url returned 404"
     if exc:
         return str(exc)
     return "source returned 404"
+
+
+def _validate_json_probe(source_type: str, response: httpx.Response) -> tuple[bool, str]:
+    """Return (valid, error_message) for JSON ATS probe responses."""
+    if source_type == "smartrecruiters":
+        try:
+            payload = response.json()
+        except Exception:
+            return False, "invalid JSON from SmartRecruiters API"
+        if not isinstance(payload, dict):
+            return False, "invalid SmartRecruiters API response"
+    return True, ""
+
+
+def _probe_result(
+    company: Company,
+    *,
+    valid: bool,
+    status_code: int | None,
+    error_message: str,
+    url: str | None,
+) -> ValidationProbeResult:
+    return ValidationProbeResult(
+        company_name=company.name,
+        source_type=company.source_type,
+        status_code=status_code,
+        valid=valid,
+        error=error_message,
+        url=url,
+    )
 
 
 async def probe_company_source(
@@ -73,42 +113,60 @@ async def probe_company_source(
 ) -> ValidationProbeResult:
     url = validation_url_for(company.source_type, company.source_config)
     if not url:
-        return ValidationProbeResult(
-            company_name=company.name,
-            source_type=company.source_type,
-            status_code=None,
+        return _probe_result(
+            company,
             valid=False,
-            error="validation not supported for this source_type",
+            status_code=None,
+            error_message="validation not supported for this source_type",
             url=None,
         )
 
     settings = get_settings()
     timeout = httpx.Timeout(settings.scrape_timeout_seconds)
     last_error: str | None = None
+    expects_json = validation_expects_json(company.source_type)
+    headers = (
+        {"Accept": "application/json", "User-Agent": "JobScraper/1.0"}
+        if expects_json
+        else {"Accept": "text/html,application/xhtml+xml", "User-Agent": "JobScraper/1.0"}
+    )
 
     for attempt in range(1, retries + 1):
         try:
             async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as client:
-                response = await client.get(url, headers={"Accept": "application/json"})
+                response = await client.get(url, headers=headers)
             status = response.status_code
-            valid = status == 200
-            err = None if valid else f"HTTP {status}"
-            return ValidationProbeResult(
-                company_name=company.name,
-                source_type=company.source_type,
-                status_code=status,
+            error_message = ""
+            valid = False
+
+            if status in (403, 404):
+                valid = False
+                error_message = f"HTTP {status}"
+            elif status != 200:
+                valid = False
+                error_message = f"HTTP {status}"
+            elif expects_json:
+                valid, error_message = _validate_json_probe(company.source_type, response)
+            else:
+                valid = looks_like_job_board(response.text, company.source_type)
+                if not valid:
+                    error_message = "page does not look like a job board"
+
+            return _probe_result(
+                company,
                 valid=valid,
-                error=err,
+                status_code=status,
+                error_message=error_message,
                 url=url,
             )
         except httpx.HTTPStatusError as exc:
             status = exc.response.status_code
-            return ValidationProbeResult(
-                company_name=company.name,
-                source_type=company.source_type,
-                status_code=status,
+            error_message = f"HTTP {status}" if status else str(exc)
+            return _probe_result(
+                company,
                 valid=status == 200,
-                error=str(exc),
+                status_code=status,
+                error_message="" if status == 200 else error_message,
                 url=url,
             )
         except Exception as exc:
@@ -116,21 +174,19 @@ async def probe_company_source(
             if attempt < retries:
                 await asyncio.sleep(PROBE_RETRY_DELAY_SECONDS * attempt)
                 continue
-            return ValidationProbeResult(
-                company_name=company.name,
-                source_type=company.source_type,
-                status_code=None,
+            return _probe_result(
+                company,
                 valid=False,
-                error=last_error,
+                status_code=None,
+                error_message=last_error,
                 url=url,
             )
 
-    return ValidationProbeResult(
-        company_name=company.name,
-        source_type=company.source_type,
-        status_code=None,
+    return _probe_result(
+        company,
         valid=False,
-        error=last_error or "unknown error",
+        status_code=None,
+        error_message=last_error or "unknown error",
         url=url,
     )
 
@@ -153,7 +209,7 @@ def apply_probe_to_company(
         company.last_validation_status = "200"
         return
 
-    company.last_error = probe.error
+    company.last_error = probe.error or None
 
     if probe.status_code == 404 and disable_on_404:
         company.enabled = False
@@ -176,7 +232,7 @@ def _tally_summary(
     disable_on_404: bool,
 ) -> None:
     summary.results.append(probe)
-    if probe.error and probe.status_code is None and "not supported" in (probe.error or ""):
+    if probe.status_code is None and "not supported" in probe.error:
         summary.skipped_count += 1
         return
     if probe.valid:
