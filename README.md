@@ -404,18 +404,27 @@ Run scraping and the morning digest **without a 24/7 server**. Point workflows a
 
 3. **Run Init DB once** (manual workflow): Actions → **Init database (one-time)** → **Run workflow** on `main`.
 
-   This runs `alembic upgrade head`, imports `data/companies.json`, and validates sources. The log ends with `=== INIT DB SUMMARY ===` (company counts).
+   This runs the full company setup against `DATABASE_URL` from secrets:
+
+   1. `alembic upgrade head`
+   2. `import_company_targets.py`
+   3. `discover_unconfigured_companies.py --limit 300`
+   4. `enable_generic_for_unconfigured.py --limit 300`
+   5. `validate_companies.py --all --enable-valid`
+   6. `db_company_summary.py`
+
+   The log ends with `=== DATABASE COMPANY SUMMARY ===` (counts by source type and validation status).
 
 4. **Run scrape** (manual or wait for cron): Actions → **Scrape every 3 hours** → **Run workflow**.
 
-   Scheduled scrape and digest workflows run `alembic upgrade head` on every job (idempotent). They do **not** re-import companies each time.
+   Scheduled scrape runs `alembic upgrade head` then prints enabled company count (`db_company_summary.py --brief`) before scraping. It does **not** re-import, discover, or enable generic Playwright on each run—only **Init database** does that.
 
 ### Workflows
 
 | Workflow file | When | What it does |
 |---------------|------|----------------|
-| `init-db.yml` | Manual only | Migrations + import companies + validate (run **once** per database) |
-| `scrape-every-3-hours.yml` | `0 */3 * * *` UTC | `alembic upgrade head` → scrape + digest email |
+| `init-db.yml` | Manual only | Full DB setup: migrate, import CSV, discover ATS, enable generic Playwright, validate, summary |
+| `scrape-every-3-hours.yml` | `0 */3 * * *` UTC | `alembic upgrade head` → enabled count → scrape + digest email |
 | `daily-digest.yml` | `0 14 * * *` UTC | `alembic upgrade head` → optional 24h digest email |
 
 All workflows support **Run workflow** via `workflow_dispatch`.
@@ -463,7 +472,10 @@ Same steps as the **Init database** workflow, runnable on your machine:
 export DATABASE_URL=postgresql+asyncpg://user:pass@host:5432/dbname
 alembic upgrade head
 python scripts/import_company_targets.py
+python scripts/discover_unconfigured_companies.py --limit 300
+python scripts/enable_generic_for_unconfigured.py --limit 300
 python scripts/validate_companies.py --all --enable-valid
+python scripts/db_company_summary.py
 ```
 
 Alembic reads `DATABASE_URL` from the environment (`alembic/env.py`); it does not use the placeholder URL in `alembic.ini`.
@@ -479,7 +491,7 @@ Use this to test secrets, migrations, Playwright, and email without waiting for 
 ### Inspect workflow logs
 
 1. **Actions** → click a workflow run → click the job (`scrape` or `digest`).
-2. Expand **Apply database migrations**, **Run scrape cycle**, or **Send daily digest**.
+2. Expand **Apply database migrations**, **Print enabled company count**, **Run scrape cycle**, or **Send daily digest**.
 3. Look for structured blocks:
    - **Scrape:** `=== SCRAPE CYCLE SUMMARY ===` with `companies_scanned`, `jobs_seen`, `new_jobs_created`, `inactive_jobs_marked`, and `scraper_failures` (also printed as JSON).
    - **Digest:** `=== DAILY DIGEST SUMMARY ===` with `digest_jobs_count`, `digest_window`, `emails_sent`, and `email_sent_successfully`.

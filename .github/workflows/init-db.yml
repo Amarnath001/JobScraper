@@ -10,9 +10,21 @@ concurrency:
 jobs:
   init:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 360
     env:
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      APP_ENV: production
+      PLAYWRIGHT_HEADLESS: "true"
+      SCRAPE_TIMEOUT_SECONDS: "90"
+      LOG_LEVEL: INFO
+      US_ONLY_MODE: "true"
+      # Faster bulk discovery in CI (still rate-limited)
+      DISCOVERY_DELAY_SECONDS: "1"
+      DISCOVERY_MAX_FOLLOW: "5"
+      GENERIC_PLAYWRIGHT_ENABLED: "true"
+      GENERIC_PLAYWRIGHT_MAX_COMPANIES_PER_RUN: "25"
+      GENERIC_PLAYWRIGHT_MAX_PAGES_PER_COMPANY: "5"
+      GENERIC_PLAYWRIGHT_TIMEOUT_SECONDS: "45"
 
     steps:
       - name: Checkout
@@ -24,11 +36,12 @@ jobs:
           python-version: "3.12"
           cache: pip
 
-      - name: Install dependencies
+      - name: Install dependencies and Playwright Chromium
         run: |
           set -euo pipefail
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+          playwright install --with-deps chromium
 
       - name: Apply database migrations
         run: |
@@ -40,34 +53,22 @@ jobs:
           set -euo pipefail
           python scripts/import_company_targets.py
 
-      - name: Validate company sources
+      - name: Discover ATS for unconfigured companies
         run: |
           set -euo pipefail
-          python scripts/validate_companies.py
+          python scripts/discover_unconfigured_companies.py --limit 300
 
-      - name: Print summary
+      - name: Enable generic Playwright for remaining unconfigured
         run: |
           set -euo pipefail
-          python -c "
-          import asyncio
-          import os
-          import sys
-          sys.path.insert(0, '.')
-          from sqlalchemy import func, select
-          from app.core.database import get_session_factory
-          from app.db.models import Company
+          python scripts/enable_generic_for_unconfigured.py --limit 300
 
-          async def main():
-              async with get_session_factory()() as session:
-                  total = await session.scalar(select(func.count()).select_from(Company))
-                  enabled = await session.scalar(
-                      select(func.count()).select_from(Company).where(Company.enabled.is_(True))
-                  )
-              print('=== INIT DB SUMMARY ===')
-              print(f'companies_total={total}')
-              print(f'companies_enabled={enabled}')
-              print(f'companies_disabled={total - enabled}')
-              print('Next: run the \"Scrape every 3 hours\" workflow (migrations run automatically on each scrape).')
+      - name: Validate all companies and enable valid sources
+        run: |
+          set -euo pipefail
+          python scripts/validate_companies.py --all --enable-valid
 
-          asyncio.run(main())
-          "
+      - name: Print database company summary
+        run: |
+          set -euo pipefail
+          python scripts/db_company_summary.py

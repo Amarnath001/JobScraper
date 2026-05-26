@@ -51,6 +51,11 @@ jobs:
           set -euo pipefail
           alembic upgrade head
 
+      - name: Print enabled company count
+        run: |
+          set -euo pipefail
+          python scripts/db_company_summary.py --brief
+
       - name: Run scrape cycle
         run: |
           set -euo pipefail
