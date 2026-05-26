@@ -240,3 +240,37 @@ def test_validation_urls_new_providers() -> None:
 def test_looks_like_job_board_icims() -> None:
     html = '<a href="/jobs/1/job">Engineer</a> icims careers'
     assert looks_like_job_board(html, "icims")
+
+
+@pytest.mark.asyncio
+async def test_generic_playwright_200_valid() -> None:
+    company = _company(
+        "generic_playwright",
+        {"careers_url": "https://acme.com/careers"},
+    )
+    company.careers_url = "https://acme.com/careers"
+    response = _mock_http_response(status_code=200, text="<html>careers jobs</html>")
+
+    with _patch_httpx_get(response):
+        result = await probe_company_source(company, retries=1)
+
+    assert result.valid is True
+    assert result.status_code == 200
+    assert result.error == ""
+
+
+@pytest.mark.asyncio
+async def test_generic_playwright_404_invalid() -> None:
+    company = _company(
+        "generic_playwright",
+        {"careers_url": "https://acme.com/careers"},
+    )
+    company.careers_url = "https://acme.com/careers"
+    response = _mock_http_response(status_code=404)
+
+    with _patch_httpx_get(response):
+        result = await probe_company_source(company, retries=1)
+
+    assert result.valid is False
+    assert result.status_code == 404
+    assert result.error == "HTTP 404"

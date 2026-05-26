@@ -8,6 +8,7 @@ from app.scrapers.greenhouse import GreenhouseScraper
 from app.scrapers.icims import ICIMSScraper
 from app.scrapers.lever import LeverScraper
 from app.scrapers.smartrecruiters import SmartRecruitersScraper
+from app.scrapers.generic_playwright import GenericPlaywrightScraper
 from app.scrapers.workday import WorkdayScraper
 
 
@@ -39,6 +40,11 @@ def _company(source_type: str, source_config: dict) -> Company:
             "smartrecruiters",
             {"company": "acme", "careers_url": "https://jobs.smartrecruiters.com/acme"},
             SmartRecruitersScraper,
+        ),
+        (
+            "generic_playwright",
+            {"careers_url": "https://acme.com/careers"},
+            GenericPlaywrightScraper,
         ),
     ],
 )

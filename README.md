@@ -224,6 +224,32 @@ Maintain targets in **`data/company_targets.csv`** (not in Python). Columns:
    ```
 5. **Commit** updated `data/company_targets.csv` when you manually fix rows (optional).
 
+### Generic Playwright fallback (best-effort)
+
+For companies without a working ATS/API config, enable heuristic Playwright scraping:
+
+```bash
+# Mark up to 25 unconfigured companies as generic_playwright + enabled
+python scripts/enable_generic_for_unconfigured.py --limit 25
+
+# Validate careers URLs (HTTP 200 or Playwright can open the page)
+python scripts/validate_companies.py --all --enable-valid
+
+# Scrape (respects GENERIC_PLAYWRIGHT_* limits)
+python scripts/run_scrape_cycle.py
+```
+
+**Recommended strategy:** use API scrapers (Greenhouse, Lever, Ashby, etc.) first; run discovery/validation to enable those; then enable Generic Playwright for remaining `unconfigured` rows. Generic mode is **less reliable** than ATS APIs—it follows public careers pages, collects job-like links, and never logs in or submits apply forms.
+
+Environment:
+
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `GENERIC_PLAYWRIGHT_ENABLED` | `true` | Master switch for scraping `generic_playwright` companies |
+| `GENERIC_PLAYWRIGHT_MAX_COMPANIES_PER_RUN` | `25` | Cap per scrape cycle |
+| `GENERIC_PLAYWRIGHT_MAX_PAGES_PER_COMPANY` | `5` | Max careers/jobs pages visited per company |
+| `GENERIC_PLAYWRIGHT_TIMEOUT_SECONDS` | `45` | Per-company Playwright budget |
+
 **Single-company discovery** (verbose, no DB update):
 
 ```bash

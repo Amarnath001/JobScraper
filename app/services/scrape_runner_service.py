@@ -148,9 +148,34 @@ async def _scrape_enabled_companies(
         res = await session.execute(select(Company).where(Company.enabled.is_(True)).order_by(Company.id))
         companies = list(res.scalars().all())
 
-    logger.info("Scrape cycle: enabled_companies=%s", len(companies))
+    settings = get_settings()
+    generic_budget = (
+        settings.generic_playwright_max_companies_per_run
+        if settings.generic_playwright_enabled
+        else 0
+    )
+    generic_used = 0
+
+    logger.info(
+        "Scrape cycle: enabled_companies=%s generic_playwright_budget=%s",
+        len(companies),
+        generic_budget,
+    )
 
     for company in companies:
+        if company.source_type == "generic_playwright":
+            if not settings.generic_playwright_enabled:
+                logger.info("Skipping %s: GENERIC_PLAYWRIGHT_ENABLED=false", company.name)
+                continue
+            if generic_used >= generic_budget:
+                logger.info(
+                    "Skipping %s: generic_playwright per-run limit (%s)",
+                    company.name,
+                    generic_budget,
+                )
+                continue
+            generic_used += 1
+
         try:
             scraper = build_scraper(company)
             normalized = await scraper.scrape()

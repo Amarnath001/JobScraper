@@ -71,6 +71,8 @@ def invalid_source_detail(company: Company, exc: BaseException | None = None) ->
         return f"iCIMS careers_url returned 404"
     if company.source_type == "gem":
         return f"Gem careers_url returned 404"
+    if company.source_type == "generic_playwright":
+        return "Generic Playwright careers_url returned 404"
     if exc:
         return str(exc)
     return "source returned 404"
@@ -106,11 +108,95 @@ def _probe_result(
     )
 
 
+async def _probe_generic_playwright(company: Company) -> ValidationProbeResult:
+    """Validate generic_playwright: HTTP 200 on careers_url, else brief Playwright open."""
+    url = (company.careers_url or company.source_config.get("careers_url") or "").strip()
+    if not url:
+        return _probe_result(
+            company,
+            valid=False,
+            status_code=None,
+            error_message="missing careers_url",
+            url=None,
+        )
+
+    settings = get_settings()
+    timeout = httpx.Timeout(
+        min(settings.scrape_timeout_seconds, settings.generic_playwright_timeout_seconds)
+    )
+    headers = {"User-Agent": "JobScraper/1.0", "Accept": "text/html,application/xhtml+xml"}
+
+    try:
+        async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as client:
+            response = await client.get(url, headers=headers)
+        if response.status_code == 200:
+            return _probe_result(
+                company,
+                valid=True,
+                status_code=200,
+                error_message="",
+                url=url,
+            )
+        if response.status_code in (403, 404):
+            return _probe_result(
+                company,
+                valid=False,
+                status_code=response.status_code,
+                error_message=f"HTTP {response.status_code}",
+                url=url,
+            )
+    except Exception as exc:
+        logger.debug("HTTP probe failed for %s, trying Playwright: %s", company.name, exc)
+
+    try:
+        from playwright.async_api import async_playwright
+
+        timeout_ms = int(settings.generic_playwright_timeout_seconds * 1000)
+        async with async_playwright() as playwright:
+            browser = await playwright.chromium.launch(headless=settings.playwright_headless)
+            try:
+                page = await browser.new_page()
+                response = await page.goto(
+                    url,
+                    wait_until="domcontentloaded",
+                    timeout=timeout_ms,
+                )
+                status = response.status if response else 200
+                if status >= 400:
+                    return _probe_result(
+                        company,
+                        valid=False,
+                        status_code=status,
+                        error_message=f"HTTP {status}",
+                        url=url,
+                    )
+                return _probe_result(
+                    company,
+                    valid=True,
+                    status_code=status,
+                    error_message="",
+                    url=url,
+                )
+            finally:
+                await browser.close()
+    except Exception as exc:
+        return _probe_result(
+            company,
+            valid=False,
+            status_code=None,
+            error_message=str(exc),
+            url=url,
+        )
+
+
 async def probe_company_source(
     company: Company,
     *,
     retries: int = PROBE_RETRIES,
 ) -> ValidationProbeResult:
+    if company.source_type == "generic_playwright":
+        return await _probe_generic_playwright(company)
+
     url = validation_url_for(company.source_type, company.source_config)
     if not url:
         return _probe_result(

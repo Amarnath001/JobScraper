@@ -25,6 +25,19 @@ class Settings(BaseSettings):
     enable_scheduler: bool = Field(default=True, alias="ENABLE_SCHEDULER")
     digest_lookback_hours: int | None = Field(default=None, alias="DIGEST_LOOKBACK_HOURS")
     us_only_mode: bool = Field(default=True, alias="US_ONLY_MODE")
+    generic_playwright_enabled: bool = Field(default=True, alias="GENERIC_PLAYWRIGHT_ENABLED")
+    generic_playwright_max_companies_per_run: int = Field(
+        default=25,
+        alias="GENERIC_PLAYWRIGHT_MAX_COMPANIES_PER_RUN",
+    )
+    generic_playwright_max_pages_per_company: int = Field(
+        default=5,
+        alias="GENERIC_PLAYWRIGHT_MAX_PAGES_PER_COMPANY",
+    )
+    generic_playwright_timeout_seconds: float = Field(
+        default=45.0,
+        alias="GENERIC_PLAYWRIGHT_TIMEOUT_SECONDS",
+    )
 
     @field_validator("digest_lookback_hours", mode="before")
     @classmethod

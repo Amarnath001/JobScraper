@@ -65,7 +65,7 @@ def validation_url_for(source_type: str, source_config: dict[str, Any]) -> str |
         if not company:
             return None
         return f"https://api.smartrecruiters.com/v1/companies/{company}/postings"
-    if source_type in ("workday", "icims", "gem"):
+    if source_type in ("workday", "icims", "gem", "generic_playwright"):
         try:
             return careers_url_for(source_type, source_config)
         except ValueError:
